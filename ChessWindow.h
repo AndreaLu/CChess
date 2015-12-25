@@ -16,7 +16,6 @@ public:
    // Let the game begin!
    void start();
 private:
-   CChess::ChessBoard board;
    int clientW;
    int clientH;
 };
