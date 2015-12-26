@@ -12,6 +12,10 @@ namespace CChess
          xTo = xT;
          yTo = yT;
       }
+      Move()
+      {
+         xFrom = yFrom = xTo = yTo = -1;
+      }
       int xFrom, yFrom;
       int xTo, yTo;
    };
