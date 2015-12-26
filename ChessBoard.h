@@ -31,10 +31,13 @@ namespace CChess
       std::string getString();
       // Perform the specified move
       void makeMove(Move);
+      void unmakeMove(Move);
       // Fill the list with the available moves
       // for the specified player
       std::list<Move> moves;
-      void computeAvailableMoves(Player);
+      void computeAvailableMoves(Player, bool CheckKing = true);
+
+      Piece getPiece(int x, int y);
    private:
       // Creates a new ChessBoard with the specified
       // move performed without modifying this
