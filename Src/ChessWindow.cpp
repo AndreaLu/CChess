@@ -2,6 +2,7 @@
 #ifndef NULL
 #define NULL 0
 #endif
+
 ChessWindow::ChessWindow()
 {
    clientW = 800;
@@ -108,29 +109,34 @@ void ChessWindow::start()
    // Instantiate all the pieces *******************************************************************
    // **********************************************************************************************
    std::list<Piece*> pieces;
-   pieces.push_back(new Piece(0,  0  ,&pieceSprites[BRook]));
-   pieces.push_back(new Piece(100,0  ,&pieceSprites[BKnight]));
-   pieces.push_back(new Piece(200,0  ,&pieceSprites[BBishop]));
-   pieces.push_back(new Piece(300,0  ,&pieceSprites[BQueen]));
-   pieces.push_back(new Piece(400,0  ,&pieceSprites[BKing]));
-   pieces.push_back(new Piece(500,0  ,&pieceSprites[BBishop]));
-   pieces.push_back(new Piece(600,0  ,&pieceSprites[BKnight]));
-   pieces.push_back(new Piece(700,0  ,&pieceSprites[BRook]));
-   pieces.push_back(new Piece(0,  700,&pieceSprites[WRook]));
-   pieces.push_back(new Piece(100,700,&pieceSprites[WKnight]));
-   pieces.push_back(new Piece(200,700,&pieceSprites[WBishop]));
-   pieces.push_back(new Piece(300,700,&pieceSprites[WQueen]));
-   pieces.push_back(new Piece(400,700,&pieceSprites[WKing]));
-   pieces.push_back(new Piece(500,700,&pieceSprites[WBishop]));
-   pieces.push_back(new Piece(600,700,&pieceSprites[WKnight]));
-   pieces.push_back(new Piece(700,700,&pieceSprites[WRook]));
-   // Create pawns
-   for(int i = 0; i < 8; i++)
-   {
-      pieces.push_back(new Piece(i*100,100,&pieceSprites[BPawn]));
-      pieces.push_back(new Piece(i*100,600,&pieceSprites[WPawn]));
-   }
+   for( int x = 0; x < 8; x++ )
+      for( int y = 0; y < 8; y++ )
+      {
+         CChess::Piece piece = board.getPiece(x,y);
+         CChess::Piece::Type tp = piece.type;
+         if(tp == CChess::Piece::None)
+            continue;
+         PieceType type;
+         type = piece.owner == CChess::White ?
+                (tp == CChess::Piece::Bishop ? WBishop : (tp == CChess::Piece::King ? WKing : (
+                 tp == CChess::Piece::Knight ? WKnight : (tp == CChess::Piece::Pawn ? WPawn : (
+                 tp == CChess::Piece::Queen ? WQueen : WRook))))) :
+                (tp == CChess::Piece::Bishop ? BBishop : (tp == CChess::Piece::King ? BKing : (
+                 tp == CChess::Piece::Knight ? BKnight : (tp == CChess::Piece::Pawn ? BPawn : (
+                 tp == CChess::Piece::Queen ? BQueen : BRook)))));
+         pieces.push_back(new Piece(x*100, y*100, &pieceSprites[type]));
+      }
 
+   /*
+    * This is how it works:
+    * In the beginning the user can move the cursor on the game window, and the cell
+    * under the cursor will be highlighted (selX, selY).
+    * If the user makes a left click, this means he wants to select a piece to move.
+    * If the selected cell is valid, it is highlighted as well as the possible destination cells.
+    * In this case, selected = true.
+    * If the user makes a new left click while selected = true, he either wants to deselct
+    * the piece or to select a destination for the move.
+    */
    bool updatesAvailable = true;
    board.computeAvailableMoves(CChess::White);
    while (window.isOpen())
@@ -167,21 +173,23 @@ void ChessWindow::start()
                window.close();
        }
 
-       // Update window ****************************************************************************
-       // ******************************************************************************************
-       if(updatesAvailable)
+
+       if( updatesAvailable || animations.size() > 0 )
        {
           window.clear();
-
-          // Draw the background
           window.draw(background);
 
+          // If I'm here there are some updates or animations to show.
+          // The updates are caused by user control input.
+          // So, process the user control and set updatesAvailable = false, but only if
+          // no animation is occurring.
+
+          // Game controls *************************************************************************
+          // ***************************************************************************************
           if(animations.size() == 0)
           {
-             // Gameplay ***************************************************************************
-             // ************************************************************************************
-             // It's player's turn
-             // Highlight the square under the cursor
+             // Highlight the cell under the cursor ++++++++++++++++++++++++++++++++++++++++++++++++
+             // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
              sf::RectangleShape shape;
              int selX = 0, selY = 0;
              while((++selX)*100 < mouseX); selX--;
@@ -190,22 +198,28 @@ void ChessWindow::start()
              shape.setSize(sf::Vector2f(100.0f,100.0f));
              shape.setFillColor(sf::Color::Green);
              window.draw(shape);
+
+             // Right mouse button deselects +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+             // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
              if(rightMousePressed)
              {
                 selected = false;
                 rightMousePressed = false;
              }
+
+             // Left mouse button ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+             // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
              if(leftMousePressed)
              {
+                // Left button while selected == false ---------------------------------------------
+                // ---------------------------------------------------------------------------------
                 if(!selected)
                 {
                    availableMoves.clear();
-                   it = board.moves.begin();
-                   while(it != board.moves.end())
+                   for(it = board.moves.begin(); it != board.moves.end(); ++it)
                    {
                       if((*it).xFrom == selX && (*it).yFrom == selY)
                          availableMoves.push_back(*it);
-                      it++;
                    }
                    if(availableMoves.size() > 0)
                    {
@@ -214,138 +228,147 @@ void ChessWindow::start()
                       selectedY = selY;
                    }
                 }
+
+                // Left button while selected == true ----------------------------------------------
+                // ---------------------------------------------------------------------------------
                 else
                 {
-                   // Mouse left button pressed with a piece selected:
-                   // if the pointer is over an available move, just move,
-                   // otherwise deselect the piece
+                   // Verify whether an available move was clicked
                    bool moveClicked = false;
-                   it = availableMoves.begin();
-                   int xFrom, yFrom, xTo, yTo;
-                   while(it != availableMoves.end())
+                   for( it = availableMoves.begin(); it != availableMoves.end(); ++it )
                    {
                       if((*it).xTo == selX && (*it).yTo == selY)
                       {
                          moveClicked = true;
-                         xFrom = (*it).xFrom * 100;
-                         yFrom = (*it).yFrom * 100;
-                         xTo   = (*it).xTo   * 100;
-                         yTo   = (*it).yTo   * 100;
                          selectedMove = (*it);
                          break;
                       }
-                      it++;
                    }
-                   if(moveClicked)
+                   if( moveClicked )
                    {
                       Piece* piece, *toKill = NULL;
                       // Find piece that has to be moved
                       std::list<Piece*>::const_iterator pit = pieces.begin();
                       while(pit != pieces.end())
                       {
-                         if( (*pit)->x == xFrom && (*pit)->y == yFrom )
+                         if( (*pit)->x == selectedMove.xFrom*100 &&
+                             (*pit)->y == selectedMove.yFrom*100 )
                             piece = *pit;
-                         if( (*pit)->x == xTo && (*pit)->y == yTo )
+                         if( (*pit)->x == selectedMove.xTo*100 &&
+                             (*pit)->y == selectedMove.yTo*100 )
                             toKill = *pit;
                          pit++;
                       }
-                      // start a new animation
-                      // Find eventual piece to kill
-
+                      // Start a new animation
                       animations.push_back(
                             new Animation(piece,piece->x,piece->y,selX*100,selY*100,10,toKill));
                       selected = false;
                    }
+                   // If no move was clicked, just deselect the piece
                    else
-                   {
-                      // deselect
                       selected = false;
-                   }
                 }
                 leftMousePressed = false;
              }
 
-             // Highlight possible moves & selected piece
+             // Highlight possible moves & selected piece ++++++++++++++++++++++++++++++++++++++++++
+             // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
              if(selected)
              {
                 shape.setPosition(selectedX*100.0f,selectedY*100.0f);
                 shape.setFillColor(sf::Color::Yellow);
                 window.draw(shape);
-                it = availableMoves.begin();
-                while(it != availableMoves.end())
+                for(it = availableMoves.begin(); it != availableMoves.end(); ++it)
                 {
                    shape.setFillColor(sf::Color::Magenta);
                    shape.setPosition((*it).xTo*100.0f,(*it).yTo*100.0f);
                    window.draw(shape);
-                   it++;
                 }
              }
              updatesAvailable = false;
           }
+
+          // Process animations ********************************************************************
+          // ***************************************************************************************
+          // TODO: move the behaviour of the animation inside the animation class
+          // TODO: add different kind of animations (disappear for the piece eaten
+          //       and appear for a new piece to make its entrance in the board)
+          // TODO: allow more than one animation to stack up
           if( animations.size() > 0 )
           {
               std::list<Animation*>::iterator ait = animations.begin();
               while(ait != animations.end())
               {
                  Animation* anim = *ait;
+                 // Animation is a linear interpolation
                  float f = anim->duration/anim->fullDuration;
                  anim->piece->x = (float)anim->xFrom * f + (float)anim->xEnd * (1.0f-f);
                  anim->piece->y = (float)anim->yFrom * f + (float)anim->yEnd * (1.0f-f);
                  anim->duration -= 1.0f;
+
+                 // Animation finished
                  if(anim->duration <= 0.0f)
                  {
-                    anim->piece->x = anim->xEnd;
-                    anim->piece->y = anim->yEnd;
-                    if(anim->toKill != NULL)
-                    {
-                       pieces.remove(anim->toKill);
-                       delete anim->toKill;
-                    }
-                    // Remove animation from the list
-                    animations.clear();
-                    // Make the move!
-                    board.makeMove(selectedMove);
-                    if(playerTurn)
-                    {
-                       // This is time for the PC to make its move
-                       playerTurn = false;
-                       selectedMove = board.computeBestMove(CChess::Black);
-                       // Add new animation for the move
-                       Piece* piece, *toKill = NULL;
-                       std::list<Piece*>::const_iterator pit = pieces.begin();
-                       while(pit != pieces.end())
-                       {
-                          Piece* pc = *pit;
-                          if(pc->x == selectedMove.xFrom*100 && pc->y == selectedMove.yFrom*100)
-                             piece = pc;
-                          if(pc->x == selectedMove.xTo*100 && pc->y == selectedMove.yTo*100)
-                             toKill = pc;
-                          pit++;
-                       }
-                       animations.push_back(new Animation(piece,piece->x,piece->y,
-                             selectedMove.xTo*100, selectedMove.yTo*100, 10, toKill));
-                       break;
-                    }
-                    else
-                    {
-                       playerTurn = true;
-                       board.computeAvailableMoves(CChess::White);
-                       break;
-                    }
-                 }
-                 ait++;
-              }
-          }
-          // Draw the pieces
-          std::list<Piece*>::const_iterator pit = pieces.begin();
-          while(pit != pieces.end())
-          {
-             (*pit)->sprite->setPosition(sf::Vector2f((*pit)->x,(*pit)->y));
-             window.draw(*(*pit)->sprite);
-             pit++;
-          }
+                   anim->piece->x = anim->xEnd;
+                   anim->piece->y = anim->yEnd;
+                   if(anim->toKill != NULL)
+                   {
+                      pieces.remove(anim->toKill);
+                      delete anim->toKill;
+                   }
 
-          window.display();
-       } // if(updatesAvailable)
+                   // Remove animation from the list
+                   animations.clear();
+
+                   // Make the move!
+                   board.makeMove(selectedMove);
+
+                   // PC Turn
+                   if(playerTurn)
+                   {
+                      // This is time for the PC to make its move
+                      playerTurn = false;
+                      selectedMove = board.computeBestMove(CChess::Black);
+                      // Add new animation for the move
+                      Piece* piece, *toKill = NULL;
+                      std::list<Piece*>::const_iterator pit = pieces.begin();
+                      while(pit != pieces.end())
+                      {
+                         Piece* pc = *pit;
+                         if(pc->x == selectedMove.xFrom*100 && pc->y == selectedMove.yFrom*100)
+                            piece = pc;
+                         if(pc->x == selectedMove.xTo*100 && pc->y == selectedMove.yTo*100)
+                            toKill = pc;
+                         pit++;
+                      }
+                      animations.push_back(new Animation(piece,piece->x,piece->y,
+                            selectedMove.xTo*100, selectedMove.yTo*100, 10, toKill));
+                      break;
+                   }
+                   else
+                   {
+                      playerTurn = true;
+                      // Reset moves accordingly to the moves available to the player
+                      board.computeAvailableMoves(CChess::White);
+                      break;
+                   }
+                }
+                // Go to next animation
+                ait++;
+             }
+         }
+         // Draw the pieces ***********************************************************************
+         // ***************************************************************************************
+         std::list<Piece*>::const_iterator pit = pieces.begin();
+         while(pit != pieces.end())
+         {
+            (*pit)->sprite->setPosition(sf::Vector2f((*pit)->x,(*pit)->y));
+            window.draw(*(*pit)->sprite);
+            pit++;
+         }
+
+         window.display();
+      }
    }
+
 }
