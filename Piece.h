@@ -5,8 +5,18 @@ namespace CChess
 {
    struct Piece
    {
+
       enum Type {None, Pawn, Knight, Bishop, Rook, Queen, King } type;
       Player owner;
+      Piece()
+      {
+         type = None;
+      }
+      Piece(Type type, Player owner)
+      {
+         this->type = type;
+         this->owner = owner;
+      }
       int getValue()
       {
          switch(type)
