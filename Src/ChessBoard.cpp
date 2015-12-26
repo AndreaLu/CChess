@@ -236,7 +236,7 @@ namespace CChess
                {
                   destX = x + offsetX[i];
                   destY = y + offsetY[i];
-                  if( destX < 0 || destX > 7 || destY < 0 || destY > 7)
+                  if( destX < 0 || destX > 7 || destY < 0 || destY > 7 )
                      continue;
                   if( pieces[destX][destY].type == Piece::None ||
                       pieces[destX][destY].owner != p )
