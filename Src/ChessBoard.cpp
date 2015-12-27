@@ -116,9 +116,9 @@ namespace CChess
       }
       return ret;
    }
-
-   void ChessBoard::computeAvailableMoves(Player p, bool checkKing)
+   void ChessBoard::computeAvailableMoves(Player p, bool checkKing, std::list<Move>* pMoves )
    {
+      std::list<Move>& moves = (pMoves == NULL ? this->moves : *pMoves);
       std::list<Move> myMoves;
 
       // Put into myMoves all the moves normally available to every piece owned by p ***************
@@ -367,35 +367,28 @@ namespace CChess
       // TODO: fix segmentation fault
       // Fill moves with the available moves for p
       computeAvailableMoves(p);
+
       // Give a score to each move and return the best one!
-      int bestScore = 0, moveScore = 0;
-      int counter = 0;
-      Move bestMove(-1,-1,-1,-1);
       std::list<Move>::const_iterator it = moves.begin();
-      ChessBoard* moveBoard = simulateMove(*it); it++;
-      bestScore = moveBoard->computeScore(p);
-      delete moveBoard;
+      makeMove(*it);
+      int bestScore = computeScore(p);
+      Move bestMove = *it;
+      unmakeMove();
+      it++;
       // TODO: this sucks
-      while(it != moves.end())
+      while( it != moves.end() )
       {
-         moveBoard = simulateMove(*it);
-         moveScore = moveBoard->computeScore(p);
+         makeMove(*it);
+         int moveScore = computeScore(p);
          if( moveScore >= bestScore )
          {
             bestScore = moveScore;
             bestMove = *it;
          }
-         delete moveBoard;
+         unmakeMove();
          it++;
-         counter++;
       }
       return bestMove;
-   }
-   ChessBoard* ChessBoard::simulateMove(Move move)
-   {
-      ChessBoard* newChessBoard = new ChessBoard(this);
-      newChessBoard->makeMove(move);
-      return newChessBoard;
    }
 
    void ChessBoard::makeMove(Move move)
@@ -407,7 +400,6 @@ namespace CChess
       pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
       // Remove the piece from the source
       pieces[move.xFrom][move.yFrom].type = Piece::None;
-
    }
    void ChessBoard::unmakeMove()
    {
@@ -431,9 +423,10 @@ namespace CChess
             else
                piecesScore -= pieces[x][y].getValue();
 
-      computeAvailableMoves(p,false);
+      std::list<Move> moves;
+      computeAvailableMoves(p, false, &moves);
       movesScore += moves.size();
-      computeAvailableMoves(p == White ? Black : White,false);
+      computeAvailableMoves(p == White ? Black : White, false, &moves);
       movesScore -= moves.size();
 
       int finalScore = movesScore * piecesScore;

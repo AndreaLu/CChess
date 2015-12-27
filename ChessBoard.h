@@ -37,15 +37,11 @@ namespace CChess
       std::list<Move> moves;
       // Fill moves with the available moves
       // for the specified playe
-      void computeAvailableMoves(Player, bool CheckKing = true);
+      void computeAvailableMoves(Player, bool CheckKing = true, std::list<Move>* moves = NULL);
       // Get the piece in a specific cell of the board
       Piece getPiece(int x, int y);
 
    private:
-      // Creates a new ChessBoard with the specified
-      // move performed without modifying this
-      // particular instance of ChessBoard.
-      ChessBoard* simulateMove(Move);
       // Chessboard
       Piece pieces[8][8];
       // Move history
