@@ -328,7 +328,7 @@ namespace CChess
                break;
             }
          // Unmake the move
-         unmakeMove(move);
+         unmakeMove();
       }
 
       // Delete these moves from myMoves ***********************************************************
@@ -397,21 +397,29 @@ namespace CChess
       newChessBoard->makeMove(move);
       return newChessBoard;
    }
-   Piece temp;
-   void ChessBoard::makeMove(Move move, bool saveHistory)
+
+   void ChessBoard::makeMove(Move move)
    {
-      temp = pieces[move.xTo][move.yTo];
-      pieces[move.xTo][move.yTo].type = pieces[move.xFrom][move.yFrom].type;
-      pieces[move.xTo][move.yTo].owner = pieces[move.xFrom][move.yFrom].owner;
+      // Save history
+      history.push_back(move);
+      eatenPieces.push_back(pieces[move.xTo][move.yTo]);
+      // Save the piece to the destination
+      pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
+      // Remove the piece from the source
       pieces[move.xFrom][move.yFrom].type = Piece::None;
-      if(saveHistory)
-         history.push_back(move);
+
    }
-   void ChessBoard::unmakeMove(Move move)
+   void ChessBoard::unmakeMove()
    {
       // TODO this won't work with a pawn changed to something else
-      pieces[move.xFrom][move.yFrom] = pieces[move.xTo][move.yTo];
-      pieces[move.xTo][move.yTo] = temp;
+      // Retrieve the last move and remove it from the history
+      Move lastMove = *(--history.end());
+      history.pop_back();
+      Piece lastEaten = *(--eatenPieces.end());
+      eatenPieces.pop_back();
+      // Unmake the move
+      pieces[lastMove.xFrom][lastMove.yFrom] = pieces[lastMove.xTo][lastMove.yTo];
+      pieces[lastMove.xTo  ][lastMove.yTo]   = lastEaten;
    }
    int ChessBoard::computeScore(Player p)
    {

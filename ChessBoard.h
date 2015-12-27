@@ -1,5 +1,5 @@
-#ifndef CHESSBOARD_H
-#define CHESSBOARD_H
+#ifndef CHESSBOARD_H_
+#define CHESSBOARD_H_
 
 #include "Move.h"
 #include "Player.h"
@@ -30,31 +30,33 @@ namespace CChess
       // to a printable string
       std::string getString();
       // Perform the specified move
-      void makeMove(Move, bool saveHistory = false);
-
-      void unmakeMove(Move);
-      // Fill the list with the available moves
-      // for the specified player
+      void makeMove(Move);
+      // Go back of 1 move in the history
+      void unmakeMove();
+      // Available moves list
       std::list<Move> moves;
+      // Fill moves with the available moves
+      // for the specified playe
       void computeAvailableMoves(Player, bool CheckKing = true);
-
+      // Get the piece in a specific cell of the board
       Piece getPiece(int x, int y);
-
 
    private:
       // Creates a new ChessBoard with the specified
       // move performed without modifying this
       // particular instance of ChessBoard.
       ChessBoard* simulateMove(Move);
-
       // Chessboard
       Piece pieces[8][8];
-
+      // Move history
       std::list<Move> history;
-
+      // For debugging purposes print history to
+      // an external file "history.txt"
       void printHistory();
+      // Variables needed to unmake a move
+      std::list<Piece> eatenPieces;
 
    };
 }
 
-#endif
+#endif /*CHESSBOARD_H_*/

@@ -320,8 +320,8 @@ void ChessWindow::start()
                    // Remove animation from the list
                    animations.clear();
 
-                   // Make the move saving history
-                   board.makeMove(selectedMove, true);
+                   // Make the move
+                   board.makeMove(selectedMove);
 
                    // PC Turn
                    if(playerTurn)
