@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 0
+#define CCHESS_DEBUG 1
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)
@@ -26,16 +26,10 @@ namespace CChess
       pieces[7][0] = Piece(Piece::King, Black);
       pieces[0][0] = Piece(Piece::King, White);
 
+   // Game state
+   state = Playing;
+   winner = Black;
    #endif
-   }
-   ChessBoard::ChessBoard(ChessBoard* cb)
-   {
-      for(int x = 0; x < 8; x++)
-         for(int y = 0; y < 8; y++)
-         {
-            pieces[x][y].owner = cb->pieces[x][y].owner;
-            pieces[x][y].type  = cb->pieces[x][y].type;
-         }
    }
    ChessBoard::~ChessBoard()
    {
@@ -71,8 +65,14 @@ namespace CChess
          if( i > 1 && i < 6 )
             for( int j = 0; j < 8; j++ )
                pieces[j][i].type = Piece::None;
-
       }
+
+      // Clear history data
+      history.clear();
+      eatenPieces.clear();
+
+      // Game state
+      state = Playing;
    }
    std::string ChessBoard::getString()
    {
@@ -300,6 +300,7 @@ namespace CChess
       std::list<Move> deletion;
       std::list<Move>::iterator eit;
       std::list<Move>::iterator it;
+      std::list<Move> mvs;
 
       for( it = myMoves.begin(); it != myMoves.end(); ++it )
       {
@@ -315,12 +316,12 @@ namespace CChess
             kingY = move.yTo;
          }
 
-         // Make the move
+         // Make the move without checking the game state
          makeMove(move);
 
          // Check if the king is in check
-         computeAvailableMoves(enemy, false);
-         for(eit = moves.begin(); eit != moves.end(); ++eit)
+         computeAvailableMoves(enemy, false, &mvs);
+         for(eit = mvs.begin(); eit != mvs.end(); ++eit)
             if((*eit).xTo == kingX && (*eit).yTo == kingY)
             {
                // If it is, mark this move for deletion
@@ -391,8 +392,8 @@ namespace CChess
       return bestMove;
    }
 
-   void ChessBoard::makeMove(Move move)
-   {
+   void ChessBoard::makeMove(Move move, bool checkGameState)
+   { // checkGameState is false by default
       // Save history
       history.push_back(move);
       eatenPieces.push_back(pieces[move.xTo][move.yTo]);
@@ -400,6 +401,57 @@ namespace CChess
       pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
       // Remove the piece from the source
       pieces[move.xFrom][move.yFrom].type = Piece::None;
+
+      // Check the state of the game (playing, stalemate, over) ************************************
+      // *******************************************************************************************
+      if( !checkGameState )
+               return;
+
+      // Detect the player that makes the move
+      Player p = pieces[move.xFrom][move.yFrom].owner;
+      Player enemy = (p == White ? Black : White);
+
+      // If enemy has no move to make and is in check, it is over!
+      std::list<Move> moves;
+      std::list<Move>::const_iterator it;
+      computeAvailableMoves(enemy, true, &moves);
+      if( moves.size() == 0 )
+      {
+         // Find enemy king position
+         bool checkMate = false;
+         Piece enemyKing(Piece::King, enemy);
+         for(int x = 0; x < 8; x++)
+         {
+            for(int y = 0; y < 8; y++)
+            {
+               if( pieces[x][y] == enemyKing )
+               {
+                  // Check if enemyKing is in check
+                  computeAvailableMoves(p, false, &moves);
+                  for(it = moves.begin(); it != moves.end(); ++it)
+                     if( (*it).xTo == x && (*it).yTo == y )
+                     {
+                        checkMate = true;
+                        break;
+                     }
+                  if( checkMate )
+                     break;
+               }
+            }
+            if( checkMate )
+               break;
+         }
+         if( checkMate )
+         {
+            state = Over;
+            winner = p;
+         }
+         else
+         {
+            // no moves but no check
+            state = Stalemate;
+         }
+      }
    }
    void ChessBoard::unmakeMove()
    {

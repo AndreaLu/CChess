@@ -10,10 +10,14 @@ namespace CChess
    class ChessBoard
    {
    public:
+      enum GameState {
+         Playing,       // Playing
+         Stalemate,     // Stalemate
+         Over           // There was a winner
+      } state;
+      Player winner;
       // Constructor
       ChessBoard();
-      // Copy constructor
-      ChessBoard(ChessBoard*);
       // Distructor
       ~ChessBoard();
       // Resets the match
@@ -29,12 +33,10 @@ namespace CChess
       // Converts the chessboard in the current arrangement
       // to a printable string
       std::string getString();
-      // Perform the specified move
-      void makeMove(Move);
-      // Go back of 1 move in the history
-      void unmakeMove();
-      // Available moves list
+
       std::list<Move> moves;
+      // Perform the specified move
+      void makeMove(Move, bool checkGameState = false);
       // Fill moves with the available moves
       // for the specified playe
       void computeAvailableMoves(Player, bool CheckKing = true, std::list<Move>* moves = NULL);
@@ -42,6 +44,10 @@ namespace CChess
       Piece getPiece(int x, int y);
 
    private:
+
+      // Go back of 1 move in the history
+      void unmakeMove();
+      // Available moves list
       // Chessboard
       Piece pieces[8][8];
       // Move history

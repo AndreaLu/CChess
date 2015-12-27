@@ -70,20 +70,20 @@ void ChessWindow::start()
 
    // Fill a texture with the chessboard background ************************************************
    // **********************************************************************************************
-   sf::RenderTexture chessBoard;
-   chessBoard.create(clientW,clientH);
+   sf::RenderTexture chessBoardTexture;
+   chessBoardTexture.create(clientW,clientH);
    // TODO: handle creation error
-   chessBoard.clear();
+   chessBoardTexture.clear();
    sf::RectangleShape rectangle(sf::Vector2f(100.0f,100.0f));
    for(int x = 0; x < 8; x++)
       for(int y = 0; y < 8; y++)
       {
          rectangle.setFillColor( ((x+y) & 1) == 0 ? sf::Color(242,218,78) : sf::Color(156,61,14));
          rectangle.setPosition(sf::Vector2f((float)x*100.0f,(float)y*100.0f));
-         chessBoard.draw(rectangle);
+         chessBoardTexture.draw(rectangle);
       }
-   chessBoard.display();
-   sf::Sprite background(chessBoard.getTexture());
+   chessBoardTexture.display();
+   sf::Sprite background(chessBoardTexture.getTexture());
 
    // Load pieces texture and sprites **************************************************************
    // **********************************************************************************************
@@ -321,7 +321,13 @@ void ChessWindow::start()
                    animations.clear();
 
                    // Make the move
-                   board.makeMove(selectedMove);
+                   board.makeMove(selectedMove, true);
+                   if( board.state != CChess::ChessBoard::Playing )
+                   {
+                      int a = 32;
+                      return;
+                   }
+
 
                    // PC Turn
                    if(playerTurn)
@@ -370,5 +376,4 @@ void ChessWindow::start()
          window.display();
       }
    }
-
 }
