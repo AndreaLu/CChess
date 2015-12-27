@@ -483,7 +483,7 @@ namespace CChess
 
       int finalScore = movesScore * piecesScore;
       if( movesScore < 0 && piecesScore < 0 )
-         finalScore = - finalScore;
+         finalScore = -finalScore;
 
       return finalScore;
    }

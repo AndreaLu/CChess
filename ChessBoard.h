@@ -44,10 +44,10 @@ namespace CChess
       Piece getPiece(int x, int y);
 
    private:
-
       // Go back of 1 move in the history
       void unmakeMove();
       // Available moves list
+
       // Chessboard
       Piece pieces[8][8];
       // Move history
