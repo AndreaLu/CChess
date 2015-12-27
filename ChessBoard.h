@@ -30,7 +30,8 @@ namespace CChess
       // to a printable string
       std::string getString();
       // Perform the specified move
-      void makeMove(Move);
+      void makeMove(Move, bool saveHistory = false);
+
       void unmakeMove(Move);
       // Fill the list with the available moves
       // for the specified player
@@ -38,6 +39,8 @@ namespace CChess
       void computeAvailableMoves(Player, bool CheckKing = true);
 
       Piece getPiece(int x, int y);
+
+
    private:
       // Creates a new ChessBoard with the specified
       // move performed without modifying this
@@ -47,6 +50,9 @@ namespace CChess
       // Chessboard
       Piece pieces[8][8];
 
+      std::list<Move> history;
+
+      void printHistory();
 
    };
 }

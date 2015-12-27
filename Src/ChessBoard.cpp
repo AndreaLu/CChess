@@ -21,7 +21,8 @@ namespace CChess
             pieces[x][y].type = Piece::None;
 
       pieces[3][4] = Piece(Piece::Knight, Black);
-      pieces[1][4] = Piece(Piece::Pawn, White);
+      pieces[1][4] = Piece(Piece::Queen, White);
+      pieces[1][6] = Piece(Piece::Queen, White);
       pieces[7][0] = Piece(Piece::King, Black);
       pieces[0][0] = Piece(Piece::King, White);
 
@@ -118,8 +119,6 @@ namespace CChess
 
    void ChessBoard::computeAvailableMoves(Player p, bool checkKing)
    {
-      moves.clear();
-
       std::list<Move> myMoves;
 
       // Put into myMoves all the moves normally available to every piece owned by p ***************
@@ -146,14 +145,16 @@ namespace CChess
                }
                // Normal move
                destY = y + (p == White ? -1 : 1);
+               if( destY < 0 || destY > 7 )
+                  continue;
                if( pieces[x][destY].type == Piece::None )
                   myMoves.push_back(Move(x,y,x,destY));
                // Eat
                if( x > 0 && pieces[x-1][destY].type != Piece::None
-                     && pieces[x-1][destY].owner != p)
+                         && pieces[x-1][destY].owner != p )
                   myMoves.push_back(Move(x,y,x-1,destY));
                if( x < 7 && pieces[x+1][destY].type != Piece::None
-                     && pieces[x+1][destY].owner != p)
+                         && pieces[x+1][destY].owner != p )
                   myMoves.push_back(Move(x,y,x+1,destY));
                continue;
             }
@@ -184,11 +185,10 @@ namespace CChess
                      if( pieces[destX][destY].owner != p )
                         myMoves.push_back(Move(x,y,destX,destY));
                      break;
-
                   }
                }
                if( type == Piece::Bishop )
-                  continue; // if piece is queen I'll have to stack the moves for rook & bishop
+                  continue;
             }
 
             // Rook Moves --------------------------------------------------------------------------
@@ -220,7 +220,6 @@ namespace CChess
                      break;
                   }
                }
-
                continue;
             }
 
@@ -270,6 +269,7 @@ namespace CChess
       // *******************************************************************************************
       if( !checkKing )
       {
+         moves.clear();
          std::list<Move>::const_iterator it = myMoves.begin();
          while(it != myMoves.end())
          {
@@ -281,14 +281,14 @@ namespace CChess
       }
       // Find the position of the king of player p *************************************************
       // *******************************************************************************************
-      int kingX, kingY;
+      int origKingX, origKingY;
       bool kingFound = false;
       for(int x = 0; x < 8; x++)
          for(int y = 0; y < 8; y++)
             if(pieces[x][y].type == Piece::King && pieces[x][y].owner == p)
             {
-               kingX = x;
-               kingY = y;
+               origKingX = x;
+               origKingY = y;
                kingFound = true;
             }
       if(!kingFound) // This should never happen
@@ -299,12 +299,15 @@ namespace CChess
       Player enemy = ((p == White) ? Black : White);
       std::list<Move> deletion;
       std::list<Move>::iterator eit;
-      std::list<Move>::iterator it = myMoves.begin();
-      while(it != myMoves.end())
+      std::list<Move>::iterator it;
+
+      for( it = myMoves.begin(); it != myMoves.end(); ++it )
       {
+         // For each move in myMoves
          Move move = *it;
 
          // If the move concerns the king, update its coordinates
+         int kingX = origKingX, kingY = origKingY;
          if(pieces[move.xFrom][move.yFrom].type == CChess::Piece::King &&
             pieces[move.xFrom][move.yFrom].owner == p)
          {
@@ -315,11 +318,8 @@ namespace CChess
          // Make the move
          makeMove(move);
 
-         //ChessBoard* newBoard = simulateMove(move);
-
          // Check if the king is in check
          computeAvailableMoves(enemy, false);
-         //computeAvailableMoves(enemy,false);
          for(eit = moves.begin(); eit != moves.end(); ++eit)
             if((*eit).xTo == kingX && (*eit).yTo == kingY)
             {
@@ -329,9 +329,6 @@ namespace CChess
             }
          // Unmake the move
          unmakeMove(move);
-         //delete newBoard;
-         // Go to next move
-         it++;
       }
 
       // Delete these moves from myMoves ***********************************************************
@@ -401,12 +398,14 @@ namespace CChess
       return newChessBoard;
    }
    Piece temp;
-   void ChessBoard::makeMove(Move move)
+   void ChessBoard::makeMove(Move move, bool saveHistory)
    {
       temp = pieces[move.xTo][move.yTo];
       pieces[move.xTo][move.yTo].type = pieces[move.xFrom][move.yFrom].type;
       pieces[move.xTo][move.yTo].owner = pieces[move.xFrom][move.yFrom].owner;
       pieces[move.xFrom][move.yFrom].type = Piece::None;
+      if(saveHistory)
+         history.push_back(move);
    }
    void ChessBoard::unmakeMove(Move move)
    {
@@ -438,5 +437,20 @@ namespace CChess
    Piece ChessBoard::getPiece(int x, int y)
    {
       return pieces[x][y];
+   }
+   void ChessBoard::printHistory()
+   {
+      char buffer[100];
+      std::ofstream out("history.txt");
+      for(std::list<Move>::const_iterator it = history.begin(); it != history.end(); ++it)
+      {
+         sprintf( buffer,"%i,%i,%i,%i\n",
+               (*it).xFrom,
+               (*it).yFrom,
+               (*it).xTo,
+               (*it).yTo );
+         out << buffer;
+      }
+      out.close();
    }
 }

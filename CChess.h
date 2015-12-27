@@ -1,7 +1,7 @@
 #ifndef CCHESS_H_
 #define CCHESS_H_
 
-
+#include <fstream>
 #include <string>
 #include <list>
 
