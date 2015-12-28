@@ -161,10 +161,10 @@ namespace CChess
                // Special move: en-passant capture -------------------------------------------------
                GameSnapshot* ps = *(--history.end());
                Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
-               if( piece.owner != pieces[x][y].owner )
+               if( piece.owner != pieces[x][y].owner || piece.type != Piece::Pawn )
                   continue;
                // If the previous move was a boost
-               if( abs(ps->move.yTo - ps->move.yFrom) == 2  && piece.type == Piece::Pawn &&
+               if( abs(ps->move.yTo - ps->move.yFrom) == 2 &&
                // and the pawn is in the right place
                    abs(ps->move.xFrom - x) == 1 && abs(ps->move.yFrom - y) == 2 )
                // Then add the en-passant capture move
