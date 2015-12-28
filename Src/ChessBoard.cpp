@@ -54,15 +54,19 @@ namespace CChess
 #else
       for(int i = 0; i < 8; i++)
       {
-         // Create pawns
-         pieces[i][4].type = Piece::Pawn;
          pieces[i][6].type = Piece::Pawn;
-         pieces[i][4].owner = Black;
          pieces[i][6].owner = White;
       }
-      pieces[4][4].type = Piece::None;
+      pieces[4][4] = Piece(Piece::Pawn, Black);
+      pieces[4][5] = Piece(Piece::Pawn, White);
+
       pieces[0][0] = Piece(Piece::King, White);
       pieces[7][0] = Piece(Piece::King, Black);
+      pieces[5][0] = Piece(Piece::Pawn, White);
+      pieces[5][1] = Piece(Piece::Pawn, White);
+      pieces[5][2] = Piece(Piece::Pawn, White);
+      pieces[6][2] = Piece(Piece::Pawn, White);
+      pieces[7][2] = Piece(Piece::Pawn, White);
 #endif
 
       // Clear history data
@@ -405,7 +409,7 @@ namespace CChess
    }
 
    void ChessBoard::makeMove(Move move, bool checkGameState)
-   { // checkGameState is false by default
+   {  // checkGameState is false by default
 
       // Save history ******************************************************************************
       // *******************************************************************************************
@@ -441,7 +445,7 @@ namespace CChess
          {
             Player p = piece.owner;
             if( move.xTo == ps->move.xFrom &&
-                move.yTo == ps->move.yFrom + (p == White ? 1 : -1) )
+                move.yTo == ps->move.yFrom + (p == White ? -1 : 1) )
             {
                // Eat the pawn
                pieces[ps->move.xTo][ps->move.yTo].type == Piece::None;
