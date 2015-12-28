@@ -415,6 +415,16 @@ namespace CChess
 
       // Make the move *****************************************************************************
       // *******************************************************************************************
+      GameSnapshot::Event* ev;
+      // If a piece was captured add the corresponding event
+      if( pieces[move.xTo][move.yTo].type != Piece::None )
+      {
+         ev = new GameSnapshot::Event;
+         ev->type = GameSnapshot::Event::capture;
+         ev->srcX = move.xTo;
+         ev->srcY = move.yTo;
+         gs->events.push_back(ev);
+      }
       // Save the piece to the destination
       pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
       // Remove the piece from the source
@@ -435,9 +445,22 @@ namespace CChess
             {
                // Eat the pawn
                pieces[ps->move.xTo][ps->move.yTo].type == Piece::None;
+               ev = new GameSnapshot::Event;
+               ev->type = GameSnapshot::Event::capture;
+               ev->srcX = ps->move.xTo;
+               ev->srcY = ps->move.yTo;
+               gs->events.push_back(ev);
             }
          }
       }
+
+      // Add the motion event
+      ev = new GameSnapshot::Event;
+      ev->type = GameSnapshot::Event::motion;
+      ev->srcX = move.xFrom;
+      ev->srcY = move.yFrom;
+      ev->dstX = move.xTo;
+      ev->dstY = move.yTo;
 
       // Check the state of the game (playing, stalemate, over) ************************************
       // *******************************************************************************************
