@@ -130,36 +130,50 @@ namespace CChess
             if( pieces[x][y].owner != p || type == Piece::None )
                continue;
 
-            // Pawn Moves --------------------------------------------------------------------------
-            // -------------------------------------------------------------------------------------
+            // Pawn Moves ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if( type == Piece::Pawn )
             {
                int destY;
-               // Boost start
+               // Boost start ----------------------------------------------------------------------
                if( (p == White && y == 6) || (p == Black && y == 1) )
                {
                   destY = y + (p == White ? -2 : 2);
                   if( pieces[x][destY].type == Piece::None )
                      myMoves.push_back(Move(x,y,x,destY));
                }
-               // Normal move
+
+               // Normal move ----------------------------------------------------------------------
                destY = y + (p == White ? -1 : 1);
                if( destY < 0 || destY > 7 )
                   continue;
                if( pieces[x][destY].type == Piece::None )
                   myMoves.push_back(Move(x,y,x,destY));
-               // Eat
+
+               // Normal capture -------------------------------------------------------------------
                if( x > 0 && pieces[x-1][destY].type != Piece::None
                          && pieces[x-1][destY].owner != p )
                   myMoves.push_back(Move(x,y,x-1,destY));
                if( x < 7 && pieces[x+1][destY].type != Piece::None
                          && pieces[x+1][destY].owner != p )
                   myMoves.push_back(Move(x,y,x+1,destY));
+
+               // Special move: en-passant capture -------------------------------------------------
+               GameSnapshot* ps = *(--history.end());
+               Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
+               if( piece.owner != pieces[x][y].owner )
+                  continue;
+               // If the previous move was a boost
+               if( abs(ps->move.yTo - ps->move.yFrom) == 2  && piece.type == Piece::Pawn &&
+               // and the pawn is in the right place
+                   abs(ps->move.xFrom - x) == 1 && abs(ps->move.yFrom - y) == 2 )
+               // Then add the en-passant capture move
+                  myMoves.push_back(Move(x,y,ps->move.xFrom,(piece.owner == White ? 5 : 2)));
                continue;
             }
 
-            // Bishop Moves ------------------------------------------------------------------------
-            // -------------------------------------------------------------------------------------
+            // Bishop Moves ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if( type == Piece::Bishop || type == Piece::Queen )
             {
                int destY, destX, steps;
@@ -190,8 +204,8 @@ namespace CChess
                   continue;
             }
 
-            // Rook Moves --------------------------------------------------------------------------
-            // -------------------------------------------------------------------------------------
+            // Rook Moves ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if( type == Piece::Rook || type == Piece::Queen )
             {
                int xStep[] = {1,0,-1,0};
@@ -222,8 +236,8 @@ namespace CChess
                continue;
             }
 
-            // Knight Moves ------------------------------------------------------------------------
-            // -------------------------------------------------------------------------------------
+            // Knight Moves ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if( type == Piece::Knight )
             {
                int offsetX[] = {2 , 1,-1,-2, -2,-1,1,2};
@@ -243,8 +257,8 @@ namespace CChess
                continue;
             }
 
-            // King Moves --------------------------------------------------------------------------
-            // -------------------------------------------------------------------------------------
+            // King Moves ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if( type == Piece::King )
             {
                int offsetX[] = {1,1,0,-1,-1,-1,0,1};
@@ -394,15 +408,34 @@ namespace CChess
    void ChessBoard::makeMove(Move move, bool checkGameState)
    { // checkGameState is false by default
 
-      // Save history
+      // Save history ******************************************************************************
+      // *******************************************************************************************
       GameSnapshot* gs = createSnapshot();
       gs->move = move;
       history.push_back(gs);
 
+      // Make the move *****************************************************************************
+      // *******************************************************************************************
       // Save the piece to the destination
       pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
       // Remove the piece from the source
       pieces[move.xFrom][move.yFrom].type = Piece::None;
+
+      // Special move: en-passant capture **********************************************************
+      // *******************************************************************************************
+      // if the previous move in the history is a boost move enable en-passant capture
+      GameSnapshot* ps = *(--(--history.end()));
+      Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
+      if( abs(ps->move.yTo - ps->move.yFrom) == 2  && piece.type == Piece::Pawn )
+      {
+         Player p = piece.owner;
+         if( move.xTo == ps->move.xFrom &&
+             move.yTo == ps->move.yFrom + (p == White ? 1 : -1) )
+         {
+            // Eat the pawn
+            pieces[ps->move.xTo][ps->move.yTo].type == Piece::None;
+         }
+      }
 
       // Check the state of the game (playing, stalemate, over) ************************************
       // *******************************************************************************************
