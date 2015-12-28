@@ -159,16 +159,19 @@ namespace CChess
                   myMoves.push_back(Move(x,y,x+1,destY));
 
                // Special move: en-passant capture -------------------------------------------------
-               GameSnapshot* ps = *(--history.end());
-               Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
-               if( piece.owner != pieces[x][y].owner || piece.type != Piece::Pawn )
-                  continue;
-               // If the previous move was a boost
-               if( abs(ps->move.yTo - ps->move.yFrom) == 2 &&
-               // and the pawn is in the right place
-                   abs(ps->move.xFrom - x) == 1 && abs(ps->move.yFrom - y) == 2 )
-               // Then add the en-passant capture move
-                  myMoves.push_back(Move(x,y,ps->move.xFrom,(piece.owner == White ? 5 : 2)));
+               if( history.size() > 0 )
+               {
+                  GameSnapshot* ps = *(--history.end());
+                  Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
+                  if( piece.owner != pieces[x][y].owner || piece.type != Piece::Pawn )
+                     continue;
+                  // If the previous move was a boost
+                  if( abs(ps->move.yTo - ps->move.yFrom) == 2 &&
+                  // and the pawn is in the right place
+                      abs(ps->move.xFrom - x) == 1 && abs(ps->move.yFrom - y) == 2 )
+                  // Then add the en-passant capture move
+                     myMoves.push_back(Move(x,y,ps->move.xFrom,(piece.owner == White ? 5 : 2)));
+               }
                continue;
             }
 
@@ -424,16 +427,19 @@ namespace CChess
       // Special move: en-passant capture **********************************************************
       // *******************************************************************************************
       // if the previous move in the history is a boost move enable en-passant capture
-      GameSnapshot* ps = *(--(--history.end()));
-      Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
-      if( abs(ps->move.yTo - ps->move.yFrom) == 2  && piece.type == Piece::Pawn )
+      if(history.size() > 1)
       {
-         Player p = piece.owner;
-         if( move.xTo == ps->move.xFrom &&
-             move.yTo == ps->move.yFrom + (p == White ? 1 : -1) )
+         GameSnapshot* ps = *(--(--history.end()));
+         Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
+         if( abs(ps->move.yTo - ps->move.yFrom) == 2  && piece.type == Piece::Pawn )
          {
-            // Eat the pawn
-            pieces[ps->move.xTo][ps->move.yTo].type == Piece::None;
+            Player p = piece.owner;
+            if( move.xTo == ps->move.xFrom &&
+                move.yTo == ps->move.yFrom + (p == White ? 1 : -1) )
+            {
+               // Eat the pawn
+               pieces[ps->move.xTo][ps->move.yTo].type == Piece::None;
+            }
          }
       }
 
