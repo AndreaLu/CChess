@@ -1,6 +1,6 @@
 #include "../CChess.h"
 #include "../ChessWindow.h"
-#define GAMEGUI 1 // 1 : GUI, 0 : CONSOLE
+#define GAMEGUI 1// 1 : GUI, 0 : CONSOLE
 
 #include <string>
 #include <sstream>
@@ -77,10 +77,28 @@ int main()
       // The specified move is valid ***************************************************************
       // *******************************************************************************************
       board.makeMove(CChess::Move(coordinates[0],coordinates[1],coordinates[2],coordinates[3]));
-      // TODO: detect player's victory
+      if(board.state == CChess::ChessBoard::Over)
+      {
+         std::cout << "You won, well done!" << std::endl;
+         break;
+      }
+      if(board.state == CChess::ChessBoard::Stalemate)
+      {
+         std::cout << "Stalemate!" << std::endl;
+         break;
+      }
       std::cout << board.getString() << std::endl << "My turn, lemme think..." << std::endl;
       board.makeMove(board.computeBestMove(CChess::Black));
-      // TODO: detect computer's victory
+      if(board.state == CChess::ChessBoard::Over)
+      {
+         std::cout << board.getString() << std::endl << "I won, you suck!" << std::endl;
+         break;
+      }
+      if(board.state == CChess::ChessBoard::Stalemate)
+      {
+         std::cout << "Stalemate!" << std::endl;
+         break;
+      }
    }
 #endif
    return 0;

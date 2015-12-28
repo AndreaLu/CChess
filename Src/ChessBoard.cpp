@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 0
+#define CCHESS_DEBUG 1
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)
@@ -13,23 +13,7 @@ namespace CChess
 {
    ChessBoard::ChessBoard()
    {
-   #if CCHESS_DEBUG == 0
       resetMatch();
-   #else
-      for(int x = 0; x < 8; x++)
-         for(int y = 0; y < 8; y++)
-            pieces[x][y].type = Piece::None;
-
-      pieces[3][4] = Piece(Piece::Knight, Black);
-      pieces[1][4] = Piece(Piece::Queen, White);
-      pieces[1][6] = Piece(Piece::Queen, White);
-      pieces[7][0] = Piece(Piece::King, Black);
-      pieces[0][0] = Piece(Piece::King, White);
-
-   // Game state
-   state = Playing;
-   winner = Black;
-   #endif
    }
    ChessBoard::~ChessBoard()
    {
@@ -37,6 +21,7 @@ namespace CChess
    }
    void ChessBoard::resetMatch()
    {
+#if CCHESS_DEBUG == 0
       // Rearrange the pieces
       for(int i = 0; i < 8; i++)
       {
@@ -66,6 +51,19 @@ namespace CChess
             for( int j = 0; j < 8; j++ )
                pieces[j][i].type = Piece::None;
       }
+#else
+      for(int i = 0; i < 8; i++)
+      {
+         // Create pawns
+         pieces[i][4].type = Piece::Pawn;
+         pieces[i][6].type = Piece::Pawn;
+         pieces[i][4].owner = Black;
+         pieces[i][6].owner = White;
+      }
+      pieces[4][4].type = Piece::None;
+      pieces[0][0] = Piece(Piece::King, White);
+      pieces[7][0] = Piece(Piece::King, Black);
+#endif
 
       // Clear history data
       clearHistory();
@@ -163,7 +161,7 @@ namespace CChess
                {
                   GameSnapshot* ps = *(--history.end());
                   Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
-                  if( piece.owner != pieces[x][y].owner || piece.type != Piece::Pawn )
+                  if( piece.owner == pieces[x][y].owner || piece.type != Piece::Pawn )
                      continue;
                   // If the previous move was a boost
                   if( abs(ps->move.yTo - ps->move.yFrom) == 2 &&
@@ -381,7 +379,6 @@ namespace CChess
    }
    Move ChessBoard::computeBestMove(Player p)
    {
-      // TODO: fix segmentation fault
       // Fill moves with the available moves for p
       computeAvailableMoves(p);
 
@@ -392,7 +389,6 @@ namespace CChess
       Move bestMove = *it;
       unmakeMove();
       it++;
-      // TODO: this sucks
       while( it != moves.end() )
       {
          makeMove(*it);
