@@ -7,6 +7,11 @@
 
 namespace CChess
 {
+   struct GameSnapshot
+   {
+      Piece pieces[8][8];  // Snapshot of the pieces in the chess board
+      Move move;           // Move that links this snapshot to the following one in the history
+   };
    class ChessBoard
    {
    public:
@@ -51,12 +56,13 @@ namespace CChess
       // Chessboard
       Piece pieces[8][8];
       // Move history
-      std::list<Move> history;
+      GameSnapshot* createSnapshot();
+      void loadSnapshot(GameSnapshot*);
+      void clearHistory();
+      std::list<GameSnapshot*> history;
       // For debugging purposes print history to
       // an external file "history.txt"
       void printHistory();
-      // Variables needed to unmake a move
-      std::list<Piece> eatenPieces;
 
    };
 }

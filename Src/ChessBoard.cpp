@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 1
+#define CCHESS_DEBUG 0
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)
@@ -33,7 +33,7 @@ namespace CChess
    }
    ChessBoard::~ChessBoard()
    {
-      moves.clear();
+      clearHistory();
    }
    void ChessBoard::resetMatch()
    {
@@ -68,8 +68,7 @@ namespace CChess
       }
 
       // Clear history data
-      history.clear();
-      eatenPieces.clear();
+      clearHistory();
 
       // Game state
       state = Playing;
@@ -394,9 +393,12 @@ namespace CChess
 
    void ChessBoard::makeMove(Move move, bool checkGameState)
    { // checkGameState is false by default
+
       // Save history
-      history.push_back(move);
-      eatenPieces.push_back(pieces[move.xTo][move.yTo]);
+      GameSnapshot* gs = createSnapshot();
+      gs->move = move;
+      history.push_back(gs);
+
       // Save the piece to the destination
       pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
       // Remove the piece from the source
@@ -455,15 +457,13 @@ namespace CChess
    }
    void ChessBoard::unmakeMove()
    {
-      // TODO this won't work with a pawn changed to something else
-      // Retrieve the last move and remove it from the history
-      Move lastMove = *(--history.end());
+      // Retrieve the last snapshot and remove it from the history
+      GameSnapshot* gs = *(--history.end());
       history.pop_back();
-      Piece lastEaten = *(--eatenPieces.end());
-      eatenPieces.pop_back();
       // Unmake the move
-      pieces[lastMove.xFrom][lastMove.yFrom] = pieces[lastMove.xTo][lastMove.yTo];
-      pieces[lastMove.xTo  ][lastMove.yTo]   = lastEaten;
+      loadSnapshot(gs);
+      // Cleanup
+      delete gs;
    }
    int ChessBoard::computeScore(Player p)
    {
@@ -495,15 +495,41 @@ namespace CChess
    {
       char buffer[100];
       std::ofstream out("history.txt");
-      for(std::list<Move>::const_iterator it = history.begin(); it != history.end(); ++it)
+      for(std::list<GameSnapshot*>::const_iterator it = history.begin(); it != history.end(); ++it)
       {
+
          sprintf( buffer,"%i,%i,%i,%i\n",
-               (*it).xFrom,
-               (*it).yFrom,
-               (*it).xTo,
-               (*it).yTo );
+               (*it)->move.xFrom,
+               (*it)->move.yFrom,
+               (*it)->move.xTo,
+               (*it)->move.yTo );
          out << buffer;
       }
       out.close();
+   }
+   GameSnapshot* ChessBoard::createSnapshot()
+   {
+      GameSnapshot* gs = new GameSnapshot();
+      for( int x = 0; x < 8; x++ )
+         for( int y = 0; y < 8; y++ )
+            gs->pieces[x][y] = pieces[x][y];
+      return gs;
+   }
+   void ChessBoard::loadSnapshot(GameSnapshot* gs)
+   {
+      for( int x = 0; x < 8; x++ )
+      for( int y = 0; y < 8; y++ )
+         pieces[x][y] = gs->pieces[x][y];
+   }
+
+   void ChessBoard::clearHistory()
+   {
+      GameSnapshot* gs;
+      while(history.size() > 0)
+      {
+         gs = *(--history.end());
+         history.pop_back();
+         delete gs;
+      }
    }
 }
