@@ -32,6 +32,7 @@ namespace CChess
          Over           // There was a winner
       } state;
       Player winner;
+      Player turn;
       // Constructor
       ChessBoard();
       // Distructor
@@ -58,7 +59,7 @@ namespace CChess
       void computeAvailableMoves(Player, bool CheckKing = true, std::list<Move>* moves = NULL);
       // Get the piece in a specific cell of the board
       Piece getPiece(int x, int y);
-
+      std::list<GameSnapshot*> history;
    private:
       // Go back of 1 move in the history
       void unmakeMove();
@@ -70,7 +71,7 @@ namespace CChess
       GameSnapshot* createSnapshot();
       void loadSnapshot(GameSnapshot*);
       void clearHistory();
-      std::list<GameSnapshot*> history;
+
       // For debugging purposes print history to
       // an external file "history.txt"
       void printHistory();

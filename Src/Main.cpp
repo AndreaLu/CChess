@@ -1,4 +1,3 @@
-#include "../CChess.h"
 #include "../ChessWindow.h"
 #define GAMEGUI 1// 1 : GUI, 0 : CONSOLE
 
@@ -9,6 +8,7 @@
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
 std::vector<std::string> split(const std::string &s, char delim);
+
 
 int main()
 {

@@ -4,6 +4,8 @@
 #include <SFML/Graphics.hpp>
 #include "CChess.h"
 #include "Piece.h"
+#include "Room.h"
+#include "Controls.h"
 
 // This class handles graphics and controls of the game
 class ChessWindow
@@ -13,11 +15,14 @@ public:
    ChessWindow();
    // Destructor
    ~ChessWindow();
-   // Let the game begin!
    void start();
+   void moveToNextRoom();
 private:
    int clientW;
    int clientH;
+   Room** gameRooms;
+   int currentRoom;
+   int roomCount;
 };
 
 #endif /* CHESSGAME_H_ */

@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 1
+#define CCHESS_DEBUG 0
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)
@@ -21,6 +21,7 @@ namespace CChess
    }
    void ChessBoard::resetMatch()
    {
+      turn = White;
 #if CCHESS_DEBUG == 0
       // Rearrange the pieces
       for(int i = 0; i < 8; i++)
@@ -411,6 +412,11 @@ namespace CChess
    void ChessBoard::makeMove(Move move, bool checkGameState)
    {  // checkGameState is false by default
 
+      // Detect the player that makes the move
+      Player p = pieces[move.xFrom][move.yFrom].owner;
+      Player opponent = (p == White ? Black : White);
+
+
       // Save history ******************************************************************************
       // *******************************************************************************************
       GameSnapshot* gs = createSnapshot();
@@ -465,25 +471,26 @@ namespace CChess
       ev->srcY = move.yFrom;
       ev->dstX = move.xTo;
       ev->dstY = move.yTo;
+      gs->events.push_back(ev);
+
+
 
       // Check the state of the game (playing, stalemate, over) ************************************
       // *******************************************************************************************
       if( !checkGameState )
                return;
 
-      // Detect the player that makes the move
-      Player p = pieces[move.xFrom][move.yFrom].owner;
-      Player enemy = (p == White ? Black : White);
+      turn = opponent;
 
       // If enemy has no move to make and is in check, it is over!
       std::list<Move> moves;
       std::list<Move>::const_iterator it;
-      computeAvailableMoves(enemy, true, &moves);
+      computeAvailableMoves(opponent, true, &moves);
       if( moves.size() == 0 )
       {
          // Find enemy king position
          bool checkMate = false;
-         Piece enemyKing(Piece::King, enemy);
+         Piece enemyKing(Piece::King, opponent);
          for(int x = 0; x < 8; x++)
          {
             for(int y = 0; y < 8; y++)
