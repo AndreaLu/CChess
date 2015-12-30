@@ -1,8 +1,12 @@
 #include "PlayRoom.h"
 
+float iY(float y)
+{
+   return(7.0f - y);
+}
 PlayRoom::PlayRoom(int clientW, int clientH, ChessWindow* win)
 {
-   player = CChess::White;
+   player = CChess::Black;
    pieceSelected = false;
 
    if( player == CChess::White )
@@ -157,7 +161,10 @@ void PlayRoom::loop(sf::RenderWindow& window)
             CChess::Move move = *it;
             if( move.xFrom == selectedPieceX && move.yFrom == selectedPieceY )
             {
-               cell.setPosition(move.xTo * cellW, move.yTo * cellH);
+               cell.setPosition(
+                     move.xTo * cellW,
+                     (player == CChess::White ? move.yTo : iY(move.yTo)) * cellH
+               );
                window.draw(cell);
             }
          }
@@ -176,6 +183,7 @@ void PlayRoom::loop(sf::RenderWindow& window)
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       if( Controls::leftMousePressed )
       {
+         if( player != CChess::White ) selY = iY( selY );
          // Piece selection
          if( !pieceSelected )
          {
@@ -225,7 +233,8 @@ void PlayRoom::loop(sf::RenderWindow& window)
    for( std::list<GPiece*>::const_iterator it = pieces.begin(); it != pieces.end(); ++it )
    {
       GPiece* piece = *it;
-      piece->sprite->setPosition(sf::Vector2f(piece->x,piece->y));
+      piece->sprite->setPosition(sf::Vector2f(piece->x,
+            player == CChess::White ? piece->y : iY((float)piece->y / (float)cellH) * (float)cellH));
       piece->sprite->setColor(sf::Color(255,255,255,piece->alpha*255));
       window.draw(*piece->sprite);
    }
