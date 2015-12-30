@@ -6,7 +6,7 @@ float iY(float y)
 }
 PlayRoom::PlayRoom(int clientW, int clientH, ChessWindow* win)
 {
-   player = CChess::Black;
+   player = CChess::White;
    pieceSelected = false;
 
    if( player == CChess::White )

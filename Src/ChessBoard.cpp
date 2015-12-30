@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 0
+#define CCHESS_DEBUG 1
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)
@@ -454,7 +454,7 @@ namespace CChess
                 move.yTo == ps->move.yFrom + (p == White ? -1 : 1) )
             {
                // Eat the pawn
-               pieces[ps->move.xTo][ps->move.yTo].type == Piece::None;
+               pieces[ps->move.xTo][ps->move.yTo].type = Piece::None;
                ev = new GameSnapshot::Event;
                ev->type = GameSnapshot::Event::capture;
                ev->srcX = ps->move.xTo;
