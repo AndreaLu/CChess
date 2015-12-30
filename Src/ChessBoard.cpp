@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 1
+#define CCHESS_DEBUG 0
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)
@@ -75,6 +75,9 @@ namespace CChess
 
       // Game state
       state = Playing;
+
+      bKingMoved = false;
+      wKingMoved = false;
    }
    std::string ChessBoard::getString()
    {
@@ -281,6 +284,25 @@ namespace CChess
                       pieces[destX][destY].owner != p )
                      myMoves.push_back(Move(x,y,destX,destY));
                }
+
+               // Special move castle --------------------------------------------------------------
+               // ----------------------------------------------------------------------------------
+               bool moved = ( p == White ? wKingMoved : bKingMoved );
+               if( moved )
+                  continue;
+               // Right castle
+               if( pieces[x+1][y].type == Piece::None &&
+                   pieces[x+2][y].type == Piece::None &&
+                   pieces[x+3][y].type == Piece::Rook &&
+                   pieces[x+3][y].owner == p )
+                  myMoves.push_back(Move(x,y,x+2,y));
+               // Left castle
+               if( pieces[x-1][y].type == Piece::None &&
+                   pieces[x-2][y].type == Piece::None &&
+                   pieces[x-3][y].type == Piece::None &&
+                   pieces[x-4][y].type == Piece::Rook &&
+                   pieces[x-4][y].owner == p )
+                  myMoves.push_back(Move(x,y,x-2,y));
             }
          }
       }
@@ -435,7 +457,9 @@ namespace CChess
          ev->srcY = move.yTo;
          gs->events.push_back(ev);
       }
+
       // Save the piece to the destination
+      Piece mover = pieces[move.xFrom][move.yFrom];
       pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
       // Remove the piece from the source
       pieces[move.xFrom][move.yFrom].type = Piece::None;
@@ -464,6 +488,35 @@ namespace CChess
          }
       }
 
+      // Special move: castle **********************************************************************
+      // *******************************************************************************************
+      if( mover.type == Piece::King )
+      {
+         ev = new GameSnapshot::Event;
+         ev->type = GameSnapshot::Event::motion;
+         // Right castle
+         if( move.xTo == move.xFrom + 2 )
+         {
+            pieces[move.xTo-1][move.yTo] = pieces[7][move.yTo];
+            pieces[7][move.yTo].type = Piece::None;
+            ev->srcX = 7;
+            ev->srcY = move.yTo;
+            ev->dstX = move.xTo-1;
+            ev->dstY = move.yTo;
+         }
+         // Left castle
+         if( move.xTo == move.xFrom - 2 )
+         {
+            pieces[move.xTo+1][move.yTo] = pieces[0][move.yTo];
+            pieces[0][move.yTo].type = Piece::None;
+            ev->srcX = 0;
+            ev->srcY = move.yTo;
+            ev->dstX = move.xTo+1;
+            ev->dstY = move.yTo;
+         }
+         gs->events.push_back(ev);
+      }
+
       // Add the motion event
       ev = new GameSnapshot::Event;
       ev->type = GameSnapshot::Event::motion;
@@ -479,6 +532,11 @@ namespace CChess
       // *******************************************************************************************
       if( !checkGameState )
                return;
+      if( mover.type == Piece::King )
+         if( mover.owner == White )
+            wKingMoved = true;
+         else
+            bKingMoved = true;
 
       turn = opponent;
 

@@ -75,7 +75,8 @@ namespace CChess
       // For debugging purposes print history to
       // an external file "history.txt"
       void printHistory();
-
+      bool wKingMoved;
+      bool bKingMoved;
    };
 }
 
