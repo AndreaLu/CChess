@@ -31,7 +31,35 @@ public:
    virtual void loop() = 0;
    virtual int  getLifetime() = 0;
 };
-
+class CreationAnimation : public Animation
+{
+public:
+   CreationAnimation(GPiece* piece, std::list<GPiece*>* pieces)
+   {
+      this->pieces = pieces;
+      this->piece = piece;
+      piece->alpha = 0;
+      lifetime = 1;
+      pieces->push_back(piece);
+   }
+   void loop()
+   {
+      piece->alpha += 0.03f;
+      if(piece->alpha >= 1)
+      {
+         piece->alpha = 1;
+         lifetime = 0;
+      }
+   }
+   int getLifetime()
+   {
+      return lifetime;
+   }
+private:
+   int lifetime;
+   std::list<GPiece*>* pieces;
+   GPiece* piece;
+};
 class CaptureAnimation : public Animation
 {
 public:
@@ -110,6 +138,11 @@ public:
    PlayRoom(int clientW, int clientH, ChessWindow* cw);
    void loop(sf::RenderWindow&);
 private:
+   enum PieceType
+      {
+         WKing = 0, WQueen, WBishop, WKnight, WRook, WPawn,
+         BKing,     BQueen, BBishop, BKnight, BRook, BPawn
+      };
    ChessWindow* gameWindow;
 
    int clientW, clientH;
