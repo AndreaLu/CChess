@@ -116,6 +116,9 @@ namespace CChess
    }
    void ChessBoard::computeAvailableMoves(Player p, bool checkKing, std::list<Move>* pMoves )
    {
+      // This function makes pMoves (or this->moves in the case pMoves is not specified)
+      // contain the available moves to player p
+
       std::list<Move>& moves = (pMoves == NULL ? this->moves : *pMoves);
       std::list<Move> myMoves;
 
@@ -307,7 +310,8 @@ namespace CChess
             }
          }
       }
-      // If no king check has to be made, copy myMoves to moves and return *************************
+
+      // If no king check control has to be made, copy myMoves to moves and return *****************
       // *******************************************************************************************
       if( !checkKing )
       {
@@ -321,8 +325,11 @@ namespace CChess
          myMoves.clear();
          return;
       }
-      // Find the position of the king of player p *************************************************
+
+      // Find the moves in myMoves that put the king in check **************************************
       // *******************************************************************************************
+
+      // Find the position of the king of player p
       int origKingX, origKingY;
       bool kingFound = false;
       for(int x = 0; x < 8; x++)
@@ -336,9 +343,7 @@ namespace CChess
       if(!kingFound) // This should never happen
          return;
 
-      // Find the moves in myMoves that put the king in check **************************************
-      // *******************************************************************************************
-      Player enemy = ((p == White) ? Black : White);
+      Player opponent = ((p == White) ? Black : White);
       std::list<Move> deletion;
       std::list<Move>::iterator eit;
       std::list<Move>::iterator it;
@@ -349,53 +354,35 @@ namespace CChess
          // For each move in myMoves
          Move move = *it;
 
-         // If the move concerns the king, update its coordinates
+         // If move concerns the king, update its coordinates
          int kingX = origKingX, kingY = origKingY;
-         if(pieces[move.xFrom][move.yFrom].type == CChess::Piece::King &&
-            pieces[move.xFrom][move.yFrom].owner == p)
+         if( pieces[move.xFrom][move.yFrom].type == CChess::Piece::King &&
+             pieces[move.xFrom][move.yFrom].owner == p )
          {
             kingX = move.xTo;
             kingY = move.yTo;
          }
 
-         // Make the move without checking the game state
-         makeMove(move);
+         // Make move without checking the game state
+         makeMove(move, false);
 
-         // Check if the king is in check
-         computeAvailableMoves(enemy, false, &mvs);
-         for(eit = mvs.begin(); eit != mvs.end(); ++eit)
-            if((*eit).xTo == kingX && (*eit).yTo == kingY)
+         // If the king is in check, mark move for deletion
+         computeAvailableMoves(opponent, false, &mvs);
+         for( eit = mvs.begin(); eit != mvs.end(); ++eit )
+            if( (*eit).xTo == kingX && (*eit).yTo == kingY )
             {
-               // If it is, mark this move for deletion
                deletion.push_back(move);
                break;
             }
-         // Unmake the move
+
+         // Unmake move
          unmakeMove();
       }
 
       // Delete these moves from myMoves ***********************************************************
       // *******************************************************************************************
-      Move del, cur;
       for(eit = deletion.begin(); eit != deletion.end(); ++eit)
-      {
-         // del is the move to be deleted
-         del = *eit;
-         // Search del inside myMoves
-         for(it = myMoves.begin(); it != myMoves.end(); ++it)
-         {
-            cur = *it;
-            if(cur.xFrom == del.xFrom &&
-               cur.yFrom == del.yFrom &&
-               cur.xTo   == del.xTo   &&
-               cur.yTo   == del.yTo )
-            {
-               // Erase del from myMove and exit the for
-               myMoves.erase(it);
-               break;
-            }
-         }
-      }
+         myMoves.remove(*eit);
       deletion.clear();
 
       // Copy myMoves to moves *********************************************************************
@@ -459,10 +446,8 @@ namespace CChess
          gs->events.push_back(ev);
       }
 
-      // Save the piece to the destination
       Piece mover = pieces[move.xFrom][move.yFrom];
-      pieces[move.xTo][move.yTo] = pieces[move.xFrom][move.yFrom];
-      // Remove the piece from the source
+      pieces[move.xTo][move.yTo] = mover;
       pieces[move.xFrom][move.yFrom].type = Piece::None;
 
       // Special move: en-passant capture **********************************************************
@@ -471,10 +456,11 @@ namespace CChess
       if( history.size() > 1 )
       {
          GameSnapshot* ps = *(--(--history.end()));
-         Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
-         if( abs(ps->move.yTo - ps->move.yFrom) == 2  && piece.type == Piece::Pawn )
+         // Find the piece which moved in the previous move
+         Piece previousMover = ps->pieces[ps->move.xFrom][ps->move.yFrom];
+         if( abs(ps->move.yTo - ps->move.yFrom) == 2  && previousMover.type == Piece::Pawn )
          {
-            Player p = piece.owner;
+            Player p = previousMover.owner;
             if( move.xTo == ps->move.xFrom &&
                 move.yTo == ps->move.yFrom + (p == White ? -1 : 1) )
             {
@@ -544,11 +530,11 @@ namespace CChess
          gs->events.push_back(ev);
       }
 
+      if( !checkGameState )
+         return;
 
       // Check the state of the game (playing, stalemate, over) ************************************
       // *******************************************************************************************
-      if( !checkGameState )
-               return;
       if( mover.type == Piece::King )
       {
          if( mover.owner == White )
