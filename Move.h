@@ -16,7 +16,10 @@ namespace CChess
       }
       Move(int xF, int yF, int xT, int yT, Piece::Type t)
       {
-         Move(xF,yF,xT,yT);
+         xFrom = xF;
+         yFrom = yF;
+         xTo = xT;
+         yTo = yT;
          type = t;
       }
       Move()
