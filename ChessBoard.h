@@ -19,8 +19,8 @@ namespace CChess
          int srcX, srcY, dstX, dstY;
          Piece piece;
       };
-      Piece pieces[8][8];        // Snapshot of the pieces in the chess board
-      Move move;                 // Move that links this snapshot to the following one (history)
+      Piece pieces[8][8];         // Snapshot of the pieces in the chess board
+      Move move;                  // Move that links this snapshot to the following one (history)
       std::list<Event*> events;   // List of the events that characterize the move
    };
    class ChessBoard

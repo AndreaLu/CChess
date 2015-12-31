@@ -53,11 +53,7 @@ namespace CChess
                pieces[j][i].type = Piece::None;
       }
 #else
-      for(int i = 0; i < 8; i++)
-      {
-         pieces[i][1].type = Piece::Pawn;
-         pieces[i][1].owner = White;
-      }
+      pieces[3][1] = Piece(Piece::Pawn, White);
 
       pieces[0][7] = Piece(Piece::King, White);
       pieces[7][7] = Piece(Piece::King, Black);
@@ -316,19 +312,14 @@ namespace CChess
       if( !checkKing )
       {
          moves.clear();
-         std::list<Move>::const_iterator it = myMoves.begin();
-         while(it != myMoves.end())
-         {
+         for(std::list<Move>::const_iterator it = myMoves.begin(); it != myMoves.end(); ++it)
             moves.push_back(*it);
-            it++;
-         }
          myMoves.clear();
          return;
       }
 
       // Find the moves in myMoves that put the king in check **************************************
       // *******************************************************************************************
-
       // Find the position of the king of player p
       int origKingX, origKingY;
       bool kingFound = false;
