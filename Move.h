@@ -23,7 +23,14 @@ namespace CChess
       {
          Move(-1,-1,-1,-1);
       }
-
+      bool operator==(const Move& move)
+      {
+         return (xFrom == move.xFrom &&
+                 xTo == move.xTo &&
+                 yFrom == move.yFrom &&
+                 yTo == move.yTo &&
+                 type == move.type);
+      }
       int xFrom, yFrom; // Move source
       int xTo, yTo;     // Move destination
       Piece::Type type; // In the case of pawn transformation: the desired piece
