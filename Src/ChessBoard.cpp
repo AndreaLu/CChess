@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 0
+#define CCHESS_DEBUG 1
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)
@@ -58,16 +58,9 @@ namespace CChess
          pieces[i][6].type = Piece::Pawn;
          pieces[i][6].owner = White;
       }
-      pieces[4][4] = Piece(Piece::Pawn, Black);
-      pieces[4][5] = Piece(Piece::Pawn, White);
 
       pieces[0][0] = Piece(Piece::King, White);
       pieces[7][0] = Piece(Piece::King, Black);
-      pieces[5][0] = Piece(Piece::Pawn, White);
-      pieces[5][1] = Piece(Piece::Pawn, White);
-      pieces[5][2] = Piece(Piece::Pawn, White);
-      pieces[6][2] = Piece(Piece::Pawn, White);
-      pieces[7][2] = Piece(Piece::Pawn, White);
 #endif
 
       // Clear history data
@@ -141,7 +134,7 @@ namespace CChess
             if( type == Piece::Pawn )
             {
                int destY;
-               // Boost start ----------------------------------------------------------------------
+               // Boost start
                if( (p == White && y == 6) || (p == Black && y == 1) )
                {
                   destY = y + (p == White ? -2 : 2);
@@ -149,14 +142,23 @@ namespace CChess
                      myMoves.push_back(Move(x,y,x,destY));
                }
 
-               // Normal move ----------------------------------------------------------------------
+               // Normal move
                destY = y + (p == White ? -1 : 1);
                if( destY < 0 || destY > 7 )
                   continue;
                if( pieces[x][destY].type == Piece::None )
-                  myMoves.push_back(Move(x,y,x,destY));
+               {
+                  if( destY != 0 && destY != 7 )
+                     myMoves.push_back(Move(x,y,x,destY));
+                  else
+                  {
+                     // Final move
+                     myMoves.push_back(Move(x,y,x,destY,Piece::Queen));
+                     myMoves.push_back(Move(x,y,x,destY,Piece::Knight));
+                  }
+               }
 
-               // Normal capture -------------------------------------------------------------------
+               // Normal capture
                if( x > 0 && pieces[x-1][destY].type != Piece::None
                          && pieces[x-1][destY].owner != p )
                   myMoves.push_back(Move(x,y,x-1,destY));
@@ -164,7 +166,7 @@ namespace CChess
                          && pieces[x+1][destY].owner != p )
                   myMoves.push_back(Move(x,y,x+1,destY));
 
-               // Special move: en-passant capture -------------------------------------------------
+               // Special move: en-passant capture
                if( history.size() > 0 )
                {
                   GameSnapshot* ps = *(--history.end());
@@ -285,8 +287,7 @@ namespace CChess
                      myMoves.push_back(Move(x,y,destX,destY));
                }
 
-               // Special move castle --------------------------------------------------------------
-               // ----------------------------------------------------------------------------------
+               // Special move castle
                bool moved = ( p == White ? wKingMoved : bKingMoved );
                if( moved )
                   continue;
@@ -467,7 +468,7 @@ namespace CChess
       // Special move: en-passant capture **********************************************************
       // *******************************************************************************************
       // if the previous move in the history is a boost move enable en-passant capture
-      if(history.size() > 1)
+      if( history.size() > 1 )
       {
          GameSnapshot* ps = *(--(--history.end()));
          Piece piece = ps->pieces[ps->move.xFrom][ps->move.yFrom];
@@ -526,6 +527,22 @@ namespace CChess
       ev->dstY = move.yTo;
       gs->events.push_back(ev);
 
+      // Special move: pawn final move
+      if( move.type != Piece::None )
+      {
+         pieces[move.xTo][move.yTo].type = move.type;
+         ev = new GameSnapshot::Event;
+         ev->type = GameSnapshot::Event::capture;
+         ev->srcX = move.xTo;
+         ev->srcY = move.yTo;
+         gs->events.push_back(ev);
+         ev = new GameSnapshot::Event;
+         ev->type = GameSnapshot::Event::creation;
+         ev->piece = Piece(move.type, p);
+         ev->srcX = move.xTo;
+         ev->srcY = move.yTo;
+         gs->events.push_back(ev);
+      }
 
 
       // Check the state of the game (playing, stalemate, over) ************************************
@@ -533,10 +550,12 @@ namespace CChess
       if( !checkGameState )
                return;
       if( mover.type == Piece::King )
+      {
          if( mover.owner == White )
             wKingMoved = true;
          else
             bKingMoved = true;
+      }
 
       turn = opponent;
 

@@ -1,6 +1,6 @@
 #ifndef PIECE_H_
 #define PIECE_H_
-
+#include "Player.h"
 namespace CChess
 {
    struct Piece
