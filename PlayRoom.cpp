@@ -4,6 +4,101 @@ float iY(float y)
 {
    return(7.0f - y);
 }
+class ChoiceAnimation : public Animation
+{
+public:
+   ChoiceAnimation(int clientW, int clientH, CChess::Move* move, sf::Sprite* sprites, sf::RenderWindow* window)
+   {
+      this->move = move;
+      this->window = window;
+      this->sprites = sprites;
+      this->clientW = clientW;
+      this->clientH = clientH;
+      lifetime = 3;
+      alpha = 0;
+      w = 260;
+      h = 140;
+      form = sf::RectangleShape(sf::Vector2f(w,h));
+      form.setPosition(sf::Vector2f(clientW/2 - w/2,clientH/2 - h/2));
+      box = sf::RectangleShape(sf::Vector2f(100,100));
+      selectedBox = 0;
+   }
+   void loop()
+   {
+      // Draw the form
+      form.setFillColor(sf::Color(255,255,255,alpha));
+      sprites[1].setPosition(sf::Vector2f(clientW/2-110,clientH/2-50));
+      sprites[1].setColor(sf::Color(255,255,255,alpha));
+      sprites[3].setPosition(sf::Vector2f(clientW/2+10,clientH/2-50));
+      sprites[3].setColor(sf::Color(255,255,255,alpha));
+      window->draw(form);
+
+
+      if( lifetime == 3 )
+      {
+         alpha += 11;
+         if(alpha >= 255)
+         {
+            alpha = 255;
+            lifetime = 2;
+         }
+      }
+      else if( lifetime == 2 )
+      {
+
+         // Detect cursor selection
+         if( Controls::mouseX > clientW/2-110 && Controls::mouseX < clientW/2-10 &&
+             Controls::mouseY > clientH/2-50 && Controls::mouseY < clientH/2+50 )
+            selectedBox = 1;
+         else if( Controls::mouseX > clientW/2+10 && Controls::mouseX < clientW/2+110 &&
+                  Controls::mouseY > clientH/2-50 && Controls::mouseY < clientH/2+50 )
+            selectedBox = 2;
+         else
+            selectedBox = 0;
+
+         // Mouse click
+         if( Controls::leftMousePressed && selectedBox != 0 )
+         {
+            move->type = (selectedBox == 1 ? CChess::Piece::Queen : CChess::Piece::Knight);
+            lifetime = 1;
+         }
+      }
+      else if( lifetime == 1 )
+      {
+         alpha -= 12;
+         if(alpha <= 0)
+         {
+            alpha = 0;
+            lifetime = 0;
+         }
+      }
+      if(selectedBox != 0)
+      {
+         box.setPosition(sf::Vector2f(
+               selectedBox == 1 ? clientW/2-110 : clientW/2+10,
+               clientH/2-50));
+         box.setFillColor(sf::Color(15,71,67,alpha));
+         window->draw(box);
+      }
+      window->draw(sprites[1]);
+      window->draw(sprites[3]);
+   }
+   int getLifetime()
+   {
+      return lifetime;
+   }
+private:
+   int lifetime;
+   int alpha;
+   int w, h;
+   int clientW,clientH;
+   sf::RectangleShape form;
+   sf::RectangleShape box;
+   int selectedBox; // 0 = none, 1 = left, 2 = right
+   sf::Sprite* sprites;
+   sf::RenderWindow* window;
+   CChess::Move* move;
+};
 PlayRoom::PlayRoom(int clientW, int clientH, ChessWindow* win)
 {
    selectedPieceX = 0;
@@ -56,11 +151,6 @@ PlayRoom::PlayRoom(int clientW, int clientH, ChessWindow* win)
          pieceSprites[i].setTexture(piecesTexture);
          pieceSprites[i++].setTextureRect(sf::IntRect(x*100,y*100,100,100));
       }
-   enum PieceType
-   {
-      WKing = 0, WQueen, WBishop, WKnight, WRook, WPawn,
-      BKing,     BQueen, BBishop, BKnight, BRook, BPawn
-   };
 
    // Instantiate all the pieces ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -147,7 +237,23 @@ void PlayRoom::loop(sf::RenderWindow& window)
                animations.push_back( (Animation*)(new CaptureAnimation(piece, &pieces)) );
             else
                animations.push_front( (Animation*)(
-                     new TranslationAnimation(piece,ev->dstX * cellW,ev->dstY * cellH)));
+                  new TranslationAnimation(piece,ev->dstX * cellW,ev->dstY * cellH)));
+         }
+         else
+         {
+            PieceType type;
+            if( board.turn == CChess::White )
+               type = (selectedMove.type == CChess::Piece::Queen ? BQueen : BKnight);
+            else
+               type = (selectedMove.type == CChess::Piece::Queen ? WQueen : WKnight);
+
+            animations.push_back(
+               (Animation*)(new CreationAnimation(
+                  new GPiece(
+                     ev->srcX * cellW,
+                     ev->srcY * cellH,
+                     &this->pieceSprites[type]),
+                  &pieces)));
          }
       }
       isMoveSelected = false;
@@ -227,6 +333,13 @@ void PlayRoom::loop(sf::RenderWindow& window)
                {
                   isMoveSelected = true;
                   selectedMove   = move;
+                  // Pawn final move
+                  if( move.type != CChess::Piece::None )
+                  {
+                     ChoiceAnimation* anim =
+                        new ChoiceAnimation(clientW,clientH,&selectedMove,this->pieceSprites,&window);
+                     animations.push_back(anim);
+                  }
                   break;
                }
             }
