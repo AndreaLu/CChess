@@ -504,14 +504,15 @@ namespace CChess
       ev->dstY = move.yTo;
       gs->events.push_back(ev);
 
-      // Special move: pawn final move
+      // Special move: pawn final move *************************************************************
+      // *******************************************************************************************
       if( move.type != Piece::None )
       {
-         pieces[move.xTo][move.yTo].type = move.type;
+         pieces[move.xTo][move.yTo] = Piece(move.type, p);
          ev = new GameSnapshot::Event;
          ev->type = GameSnapshot::Event::capture;
-         ev->srcX = move.xTo;
-         ev->srcY = move.yTo;
+         ev->srcX = move.xFrom;
+         ev->srcY = move.yFrom;
          gs->events.push_back(ev);
          ev = new GameSnapshot::Event;
          ev->type = GameSnapshot::Event::creation;
