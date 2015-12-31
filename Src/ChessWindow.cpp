@@ -4,14 +4,16 @@
 #endif
 
 #include "../PlayRoom.h"
+#include "../MenuRoom.h"
 ChessWindow::ChessWindow()
 {
    clientW      = 800;
    clientH      = 800;
 
-   roomCount    = 1;
+   roomCount    = 2;
    gameRooms    = new Room*[roomCount]();
-   gameRooms[0] =  new PlayRoom(clientW, clientH, this);
+   gameRooms[0] = new MenuRoom(clientW, clientH);
+   gameRooms[1] = new PlayRoom(clientW, clientH, this);
    currentRoom  = 0;
 }
 ChessWindow::~ChessWindow()

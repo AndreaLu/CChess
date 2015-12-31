@@ -13,6 +13,9 @@ public:
    void loop(sf:: RenderWindow&);
 private:
    int clientW, clientH;
+
+   sf::RenderTexture backgroundTexture;
+   sf::Sprite backgroundSprite;
 };
 
 
