@@ -94,6 +94,8 @@ void PlayRoom::loop(sf::RenderWindow& window)
    window.draw(background);
 
    // If an event is occurring, show it, otherwise accept user input
+   // Show animations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    if( animations.size() > 0 )
    {
       Animation* anim = (Animation*)(*animations.begin());
@@ -112,6 +114,8 @@ void PlayRoom::loop(sf::RenderWindow& window)
          }
       }
    }
+   // Make a move ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    else if( isMoveSelected )
    {
       // User made his move checking the state of the game after it
@@ -158,8 +162,8 @@ void PlayRoom::loop(sf::RenderWindow& window)
       {
          cell.setFillColor(sf::Color::Yellow);
          for( std::list<CChess::Move>::iterator it = availableMoves.begin();
-                                                            it != availableMoves.end();
-                                                            ++it )
+                                                it != availableMoves.end();
+                                              ++it )
          {
             CChess::Move move = *it;
             if( move.xFrom == selectedPieceX && move.yFrom == selectedPieceY )
