@@ -1,6 +1,6 @@
 #include "../CChess.h"
 using namespace CChess;
-#define CCHESS_DEBUG 1
+#define CCHESS_DEBUG 0
 // TODO: implement the 'castle' move
 // TODO: implement pawn's final move
 int abs(int x)

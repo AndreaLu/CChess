@@ -1,7 +1,9 @@
 #include "MenuRoom.h"
 
-MenuRoom::MenuRoom(int clientW, int clientH)
+MenuRoom::MenuRoom(int clientW, int clientH, ChessWindow* cw)
 {
+
+   this->chessWindow = cw;
    this->clientW = clientW;
    this->clientH = clientH;
 
@@ -82,6 +84,13 @@ MenuRoom::MenuRoom(int clientW, int clientH)
    backgroundTexture.draw(wKnight);
    backgroundTexture.draw(bRook);
 
+   // Draw the text
+   text.setString("Press mouse L to play as White, R as Black");
+   text.setColor(sf::Color(12,12,12));
+   text.setCharacterSize(30);
+   text.setPosition(clientW / 2 - text.getGlobalBounds().width / 2, y + 300);
+   backgroundTexture.draw(text);
+
    backgroundSprite = sf::Sprite(backgroundTexture.getTexture());
    backgroundSprite.setScale(sf::Vector2f(1.0f,-1.0f));
    backgroundSprite.setPosition(0,clientH);
@@ -90,4 +99,15 @@ MenuRoom::MenuRoom(int clientW, int clientH)
 void MenuRoom::loop(sf::RenderWindow& window)
 {
    window.draw(backgroundSprite);
+
+   if( Controls::leftMousePressed )
+   {
+      chessWindow->player = CChess::White;
+      chessWindow->moveToNextRoom();
+   }
+   if( Controls::rightMousePressed )
+   {
+      chessWindow->player = CChess::Black;
+      chessWindow->moveToNextRoom();
+   }
 }

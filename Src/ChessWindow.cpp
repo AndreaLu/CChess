@@ -12,8 +12,8 @@ ChessWindow::ChessWindow()
 
    roomCount    = 2;
    gameRooms    = new Room*[roomCount]();
-   gameRooms[0] = new MenuRoom(clientW, clientH);
-   gameRooms[1] = new PlayRoom(clientW, clientH, this);
+   gameRooms[0] = new MenuRoom(clientW, clientH, this);
+   gameRooms[1] = 0;//new PlayRoom(clientW, clientH, this);
    currentRoom  = 0;
 }
 ChessWindow::~ChessWindow()
@@ -72,5 +72,18 @@ void ChessWindow::start()
 
 void ChessWindow::moveToNextRoom()
 {
-   this->currentRoom++;
+   currentRoom++;
+   if( currentRoom >= roomCount )
+      return;
+   if( this->gameRooms[currentRoom] == 0 )
+   {
+      switch(currentRoom)
+      {
+      case(1):
+            this->gameRooms[1] = new PlayRoom(clientW,clientH,this);
+      break;
+      default:
+         return;
+      }
+   }
 }

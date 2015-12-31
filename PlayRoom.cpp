@@ -104,7 +104,7 @@ PlayRoom::PlayRoom(int clientW, int clientH, ChessWindow* win)
    selectedPieceX = 0;
    selectedPieceY = 0;
 
-   player = CChess::White;
+   player = win->player;
    pieceSelected = false;
 
    if( player == CChess::White )

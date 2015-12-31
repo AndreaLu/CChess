@@ -17,6 +17,7 @@ public:
    ~ChessWindow();
    void start();
    void moveToNextRoom();
+   CChess::Player player;
 private:
    int clientW;
    int clientH;
