@@ -55,12 +55,12 @@ namespace CChess
 #else
       for(int i = 0; i < 8; i++)
       {
-         pieces[i][6].type = Piece::Pawn;
-         pieces[i][6].owner = White;
+         pieces[i][1].type = Piece::Pawn;
+         pieces[i][1].owner = White;
       }
 
-      pieces[0][0] = Piece(Piece::King, White);
-      pieces[7][0] = Piece(Piece::King, Black);
+      pieces[0][7] = Piece(Piece::King, White);
+      pieces[7][7] = Piece(Piece::King, Black);
 #endif
 
       // Clear history data
