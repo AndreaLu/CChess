@@ -21,22 +21,22 @@ namespace CChess
          this->type = type;
          this->owner = owner;
       }
-      int getValue()
+      double getValue()
       {
          switch(type)
          {
          case(Pawn):
-               return 1;
+               return 1.0;
          case(Knight):
-               return 3;
+               return 3.0;
          case(Bishop):
-               return 5;
+               return 5.0;
          case(Rook):
-               return 8;
+               return 8.0;
          case(Queen):
-               return 9;
+               return 9.0;
          default:
-            return 0;
+            return 0.0;
          }
       }
    };

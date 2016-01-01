@@ -4,33 +4,35 @@
 #include "Move.h"
 #include "Player.h"
 #include "Piece.h"
-
+#include "GameSnapshot.h"
+#include "GameState.h"
 namespace CChess
 {
-   struct GameSnapshot
+   struct MoveTree
    {
-      struct Event
+      MoveTree()
       {
-         enum Type {
-            motion,
-            capture,
-            creation
-         } type;
-         int srcX, srcY, dstX, dstY;
-         Piece piece;
-      };
-      Piece pieces[8][8];         // Snapshot of the pieces in the chess board
-      Move move;                  // Move that links this snapshot to the following one (history)
-      std::list<Event*> events;   // List of the events that characterize the move
+         this->move = Move();
+         childrenCount = 0;
+         children = NULL;
+         score = 0;
+      }
+      MoveTree(Move move)
+      {
+         this->move = move;
+         childrenCount = 0;
+         children = NULL;
+         score = 0;
+      }
+      Move move;
+      MoveTree** children;
+      int childrenCount;
+      double score;
    };
    class ChessBoard
    {
    public:
-      enum GameState {
-         Playing,       // Playing
-         Stalemate,     // Stalemate
-         Over           // There was a winner
-      } state;
+      GameState state;
       Player winner;
       Player turn;
       // Constructor
@@ -46,7 +48,7 @@ namespace CChess
       Move computeBestMove(Player);
       // Determine how good the specified player
       // is in the current arrangement
-      int computeScore(Player);
+      double computeScore(Player);
       // Converts the chessboard in the current arrangement
       // to a printable string
       std::string getString();
@@ -60,7 +62,11 @@ namespace CChess
       // Get the piece in a specific cell of the board
       Piece getPiece(int x, int y);
       std::list<GameSnapshot*> history;
+
+      void setIntellect(int);
    private:
+      Move _computeBestMove(Player,int);
+      void computeMoveTree(Player,Player, int level, MoveTree* parent = NULL, MoveTree* root = NULL);
       // Go back of 1 move in the history
       void unmakeMove();
       // Available moves list
@@ -77,7 +83,11 @@ namespace CChess
       void printHistory();
       bool wKingMoved;
       bool bKingMoved;
+
+      unsigned int intellect;
+      unsigned int n;
    };
+
 }
 
 #endif /*CHESSBOARD_H_*/
