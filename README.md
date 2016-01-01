@@ -17,4 +17,4 @@ To play chess you only need to instantiate `CChess::ChessBoard` and properly use
 - `Move computeBestMove(Player player)` returns the best move for the specified player according to the currently implemented AI. `Player` is an enum containing, surprise surprise, `Black` and `White`.
 - `std::string getString()` returns a string representing a printable version of the board.
 
-Check out [Src/Main.cpp](https://github.com/AndreaLu/CChess/blob/master/Src/Main.cpp#L19) to see an example of a command-line based usage where the user plays as white against the CPU (althought creating human vs. human or cpu vs. cpu matches is straightforward)
+Check out [Src/Main.cpp](https://github.com/AndreaLu/CChess/blob/master/Src/Main.cpp#L19) to see an example of a command-line based usage where the user plays as white against the CPU (althought creating human vs. human or cpu vs. cpu matches is straightforward).
