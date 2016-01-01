@@ -1,10 +1,6 @@
 #ifndef MENUROOM_H_
 #define MENUROOM_H_
 
-#include <SFML/Graphics.hpp>
-#include "Room.h"
-#include "Controls.h"
-#include "ChessWindow.h"
 
 class MenuRoom : public Room
 {

@@ -1,12 +1,6 @@
 #ifndef PLAYROOM_H_
 #define PLAYROOM_H_
 
-#include <SFML/Graphics.hpp>
-#include "CChess.h"
-#include "Piece.h"
-#include "Room.h"
-#include "Controls.h"
-#include "ChessWindow.h"
 
 // This class represents the pieces to be drawed
 struct GPiece
@@ -30,6 +24,7 @@ class Animation
 public:
    virtual void loop() = 0;
    virtual int  getLifetime() = 0;
+   virtual ~Animation() {}
 };
 class CreationAnimation : public Animation
 {
@@ -94,7 +89,6 @@ private:
    GPiece* piece;
    std::list<GPiece*>* pieces;
 };
-
 class TranslationAnimation : public Animation
 {
 public:

@@ -1,6 +1,7 @@
 #ifndef PIECE_H_
 #define PIECE_H_
-#include "Player.h"
+
+
 namespace CChess
 {
    struct Piece
@@ -35,6 +36,8 @@ namespace CChess
                return 8.0;
          case(Queen):
                return 9.0;
+         case(King):
+               return 10.0;
          default:
             return 0.0;
          }

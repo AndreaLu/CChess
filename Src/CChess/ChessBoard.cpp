@@ -27,8 +27,8 @@ namespace CChess
    ChessBoard::ChessBoard()
    {
       resetMatch();
-      intellect = 5;
-      n = 3;
+      intellect = 1;
+      n = 20;
    }
    ChessBoard::~ChessBoard()
    {
@@ -402,46 +402,64 @@ namespace CChess
    {
       this->intellect = intellect;
    }
+
    Move ChessBoard::computeBestMove(Player p)
    {
       MoveTree tree;
-      computeMoveTree(p, p, intellect, &tree);
+      tree.root = new TreeNode();
+      computeMoveTree(p, intellect, tree.root);
 
-      if( tree.childrenCount == 0 )
+      if( tree.root->childrenCount == 0 )
          return(Move());
+      std::list<TreeNode*> leaves;
+      std::list<TreeNode*>::const_iterator it;
 
-      Move bestMove;
-      int bestScore;
-      bestScore = tree.children[0]->score;
-      bestMove  = tree.children[0]->move;
-      for( int i = 1; i < tree.childrenCount; i++ )
+      double bestScore = 0, score;
+      Move   bestMove;
+      tree.getLeaves(&leaves, tree.root->children[0]);
+      for( it = leaves.begin(); it != leaves.end(); ++it )
+         bestScore += (*it)->relativeScore;
+      bestScore /= (double)leaves.size();
+      bestMove = tree.root->children[0]->move;
+
+      for( int i = 1; i < tree.root->childrenCount; i++ )
       {
-         if( tree.children[i]->score > bestScore )
+         tree.getLeaves(&leaves, tree.root->children[i]);
+         score = 0;
+         for( it = leaves.begin(); it != leaves.end(); ++it )
+            score += (*it)->relativeScore;
+         score /= (double)leaves.size();
+         if( score > bestScore )
          {
-            bestScore = tree.children[i]->score;
-            bestMove  = tree.children[i]->move;
+            bestScore = score;
+            bestMove = tree.root->children[i]->move;
          }
       }
+
       // TODO: clear tree (memory leak)
+
       return bestMove;
    }
-   void ChessBoard::computeMoveTree(Player originalPlayer, Player p, int level, MoveTree* parent, MoveTree* root)
+   void ChessBoard::computeMoveTree(Player p, unsigned int level, TreeNode* parent, Player originalPlayer)
    {
       Player opponent = (p == White ? Black : White);
+      Player actualOriginalPlayer = (level == intellect ?  p : originalPlayer);
+      // originalPlayer is the player who called computeBestMove
 
       // Fill moves with the available moves for p
       std::list<Move> moves;
       computeAvailableMoves(p, true, &moves);
+      int N = (moves.size() >= n ? n : moves.size());
 
       // find the N best moves
-      int N = (moves.size() >= n ? n : moves.size());
-      parent->children = new MoveTree*[N];
+      parent->children = new TreeNode*[N];
       parent->childrenCount = N;
       for(int i = 0; i < N; i++)
       {
+         // Find the best move in moves
          std::list<Move>::const_iterator it = moves.begin();
          makeMove(*it);
-         int bestScore = computeScore(originalPlayer);
+         int bestScore = computeScore(actualOriginalPlayer);
          Move bestMove = *it;
          unmakeMove();
          it++;
@@ -457,14 +475,22 @@ namespace CChess
             unmakeMove();
             it++;
          }
-         parent->children[i] = new MoveTree(bestMove);
+
+         // Add the move to the tree and remove it from moves
+         parent->children[i] = new TreeNode();
+         parent->children[i]->move = bestMove;
+         parent->children[i]->actualScore = bestScore;
+         double temp = bestScore - parent->actualScore;
+         parent->children[i]->relativeScore = parent->relativeScore + temp;
          moves.remove(bestMove);
-         MoveTree* actualRoot = (level == intellect ? parent->children[i] : root);
-         if( level < intellect )
-            actualRoot->score += (double)bestScore;//pow((double)N,intellect - level);
+
          if( level == 0 )
             continue;
-         computeMoveTree(originalPlayer, opponent, level-1, parent->children[i], actualRoot);
+
+         // Continue building the tree
+         makeMove(bestMove);
+         computeMoveTree(opponent, level-1, parent->children[i], actualOriginalPlayer);
+         unmakeMove();
       }
    }
 
@@ -650,22 +676,15 @@ namespace CChess
    double ChessBoard::computeScore(Player p)
    {
       double score = 0;
-      Player opponent = (p == White ? Black : White);
+      //Player opponent = (p == White ? Black : White);
 
-      std::list<Move>::const_iterator it;
-      std::list<Move> moves;
-
-      computeAvailableMoves(p, false, &moves);
-      for( it = moves.begin(); it != moves.end(); ++it)
+      for(int x = 0; x < 8; x++)
+      for(int y = 0; y < 8; y++)
       {
-         Move mv = *it;
-         score += pieces[mv.xFrom][mv.yFrom].getValue();
-      }
-      computeAvailableMoves(opponent, false, &moves);
-      for( it = moves.begin(); it != moves.end(); ++it)
-      {
-         Move mv = *it;
-         score -= pieces[mv.xFrom][mv.yFrom].getValue();
+         if( pieces[x][y].type == Piece::None )
+            continue;
+         double factor = pieces[x][y].owner == p ? 1.0 : -1.0;
+         score += factor * pieces[x][y].getValue();
       }
 
       return score;

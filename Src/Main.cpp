@@ -1,4 +1,4 @@
-#include "../ChessWindow.h"
+#include "GUI.h"
 #define GAMEGUI 1// 1 : GUI, 0 : CONSOLE
 
 #include <string>

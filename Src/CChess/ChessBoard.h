@@ -1,34 +1,9 @@
 #ifndef CHESSBOARD_H_
 #define CHESSBOARD_H_
 
-#include "Move.h"
-#include "Player.h"
-#include "Piece.h"
-#include "GameSnapshot.h"
-#include "GameState.h"
 namespace CChess
 {
-   struct MoveTree
-   {
-      MoveTree()
-      {
-         this->move = Move();
-         childrenCount = 0;
-         children = NULL;
-         score = 0;
-      }
-      MoveTree(Move move)
-      {
-         this->move = move;
-         childrenCount = 0;
-         children = NULL;
-         score = 0;
-      }
-      Move move;
-      MoveTree** children;
-      int childrenCount;
-      double score;
-   };
+
    class ChessBoard
    {
    public:
@@ -65,8 +40,12 @@ namespace CChess
 
       void setIntellect(int);
    private:
-      Move _computeBestMove(Player,int);
-      void computeMoveTree(Player,Player, int level, MoveTree* parent = NULL, MoveTree* root = NULL);
+      void computeMoveTree(
+            Player p,
+            unsigned int intellectLevel,
+            TreeNode* parent,
+            Player originalPlayer = CChess::White
+       );
       // Go back of 1 move in the history
       void unmakeMove();
       // Available moves list
