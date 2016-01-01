@@ -1,7 +1,6 @@
 #ifndef MOVE_H_
 #define MOVE_H_
 
-#include "Piece.h"
 namespace CChess
 {
    struct Move
@@ -24,7 +23,11 @@ namespace CChess
       }
       Move()
       {
-         Move(-1,-1,-1,-1);
+         xFrom = -1;
+         yFrom = -1;
+         xTo = -1;
+         yTo = -1;
+         type = Piece::None;
       }
       bool operator==(const Move& move)
       {

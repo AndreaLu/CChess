@@ -1,4 +1,4 @@
-#include "MenuRoom.h"
+#include "../GUI.h"
 
 MenuRoom::MenuRoom(int clientW, int clientH, ChessWindow* cw)
 {

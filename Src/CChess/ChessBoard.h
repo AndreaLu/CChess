@@ -1,36 +1,13 @@
 #ifndef CHESSBOARD_H_
 #define CHESSBOARD_H_
 
-#include "Move.h"
-#include "Player.h"
-#include "Piece.h"
-
 namespace CChess
 {
-   struct GameSnapshot
-   {
-      struct Event
-      {
-         enum Type {
-            motion,
-            capture,
-            creation
-         } type;
-         int srcX, srcY, dstX, dstY;
-         Piece piece;
-      };
-      Piece pieces[8][8];         // Snapshot of the pieces in the chess board
-      Move move;                  // Move that links this snapshot to the following one (history)
-      std::list<Event*> events;   // List of the events that characterize the move
-   };
+
    class ChessBoard
    {
    public:
-      enum GameState {
-         Playing,       // Playing
-         Stalemate,     // Stalemate
-         Over           // There was a winner
-      } state;
+      GameState state;
       Player winner;
       Player turn;
       // Constructor
@@ -46,7 +23,7 @@ namespace CChess
       Move computeBestMove(Player);
       // Determine how good the specified player
       // is in the current arrangement
-      int computeScore(Player);
+      double computeScore(Player);
       // Converts the chessboard in the current arrangement
       // to a printable string
       std::string getString();
@@ -60,7 +37,15 @@ namespace CChess
       // Get the piece in a specific cell of the board
       Piece getPiece(int x, int y);
       std::list<GameSnapshot*> history;
+
+      void setIntellect(int);
    private:
+      void computeMoveTree(
+            Player p,
+            unsigned int intellectLevel,
+            TreeNode* parent,
+            Player originalPlayer = CChess::White
+       );
       // Go back of 1 move in the history
       void unmakeMove();
       // Available moves list
@@ -77,7 +62,11 @@ namespace CChess
       void printHistory();
       bool wKingMoved;
       bool bKingMoved;
+
+      unsigned int intellect;
+      unsigned int n;
    };
+
 }
 
 #endif /*CHESSBOARD_H_*/

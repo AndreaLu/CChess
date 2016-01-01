@@ -1,10 +1,9 @@
-#include "../ChessWindow.h"
+#include "../GUI.h"
 #ifndef NULL
 #define NULL 0
 #endif
 
-#include "../PlayRoom.h"
-#include "../MenuRoom.h"
+
 ChessWindow::ChessWindow()
 {
    clientW      = 800;
@@ -15,6 +14,8 @@ ChessWindow::ChessWindow()
    gameRooms[0] = new MenuRoom(clientW, clientH, this);
    gameRooms[1] = 0;//new PlayRoom(clientW, clientH, this);
    currentRoom  = 0;
+
+   player = CChess::White;
 }
 ChessWindow::~ChessWindow()
 {

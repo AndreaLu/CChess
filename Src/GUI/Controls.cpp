@@ -1,5 +1,5 @@
 // Definition of control variables
-#include "../Controls.h"
+#include "../GUI.h"
 bool Controls::leftMousePressed = false;
 bool Controls::rightMousePressed = false;
 bool Controls::windowResized = false;

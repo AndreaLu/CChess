@@ -1,6 +1,7 @@
 #ifndef PIECE_H_
 #define PIECE_H_
-#include "Player.h"
+
+
 namespace CChess
 {
    struct Piece
@@ -21,22 +22,25 @@ namespace CChess
          this->type = type;
          this->owner = owner;
       }
-      int getValue()
+      // Return the value of the piece (from 0 to 1)
+      double getValue()
       {
          switch(type)
          {
          case(Pawn):
-               return 1;
+               return 1.0 / 10.0;
          case(Knight):
-               return 3;
+               return 3.0 / 10.0;
          case(Bishop):
-               return 5;
+               return 5.0 / 10.0;
          case(Rook):
-               return 8;
+               return 8.0 / 10.0;
          case(Queen):
-               return 9;
+               return 9.0 / 10.0;
+         case(King):
+               return 10.0 / 10.0;
          default:
-            return 0;
+            return 0.0;
          }
       }
    };

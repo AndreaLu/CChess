@@ -9,11 +9,31 @@ int abs(int x)
       return -x;
    return x;
 }
+double pow(double a, int n)
+{
+   if( n == 0 )
+      return 1.0;
+   double ret = a;
+   while(n-- > 0)
+      ret *= a;
+   return ret;
+}
+// each chell has a value ranging from 0 to 1
+double clamp(double x, double max)
+{
+   return x > max ? max : x;
+}
+double getCellValue(int x, int y)
+{
+   return( 0.3 + clamp((((double)y / 7.0) + (3.5-abs(x-3.5))/3.5)/2.0,1.0) );
+}
 namespace CChess
 {
    ChessBoard::ChessBoard()
    {
       resetMatch();
+      intellect = 2;
+      n = 6;
    }
    ChessBoard::~ChessBoard()
    {
@@ -383,33 +403,112 @@ namespace CChess
          moves.push_back(*it);
       myMoves.clear();
    }
+   void ChessBoard::setIntellect(int intellect)
+   {
+      this->intellect = intellect;
+   }
    Move ChessBoard::computeBestMove(Player p)
    {
-      // Fill moves with the available moves for p
-      computeAvailableMoves(p);
+      MoveTree tree;
+      tree.root = new TreeNode();
+      computeMoveTree(p, intellect, tree.root);
 
-      // Give a score to each move and return the best one!
-      std::list<Move>::const_iterator it = moves.begin();
-      makeMove(*it);
-      int bestScore = computeScore(p);
-      Move bestMove = *it;
-      unmakeMove();
-      it++;
-      while( it != moves.end() )
+      if( tree.root->childrenCount == 0 )
+         return(Move());
+      std::list<TreeNode*> leaves;
+      std::list<TreeNode*>::const_iterator it;
+
+      double bestScore = 0, score;
+      Move   bestMove;
+      tree.getLeaves(&leaves, tree.root->children[0]);
+      for( it = leaves.begin(); it != leaves.end(); ++it )
+         bestScore += (*it)->relativeScore;
+      bestScore /= (double)leaves.size();
+      bestMove = tree.root->children[0]->move;
+
+      for( int i = 1; i < tree.root->childrenCount; i++ )
       {
-         makeMove(*it);
-         int moveScore = computeScore(p);
-         if( moveScore >= bestScore )
+         tree.getLeaves(&leaves, tree.root->children[i]);
+         score = 0;
+         for( it = leaves.begin(); it != leaves.end(); ++it )
+            score += (*it)->relativeScore;
+         score /= (double)leaves.size();
+         if( score > bestScore )
          {
-            bestScore = moveScore;
-            bestMove = *it;
+            bestScore = score;
+            bestMove = tree.root->children[i]->move;
          }
-         unmakeMove();
-         it++;
       }
+
+      leaves.clear();
+      // TODO: clear tree (memory leak)
+      tree.clear();
       return bestMove;
    }
+   void ChessBoard::computeMoveTree(Player p, unsigned int level, TreeNode* parent, Player originalPlayer)
+   {
+      Player opponent = (p == White ? Black : White);
+      Player actualOriginalPlayer = (level == intellect ?  p : originalPlayer);
+      // originalPlayer is the player who called computeBestMove
 
+      // Fill moves with the available moves for p
+      std::list<Move> moves;
+      computeAvailableMoves(p, true, &moves);
+      int N = (moves.size() >= n ? n : moves.size());
+
+      // find the N best moves for player p
+      parent->children = new TreeNode*[N];
+      parent->childrenCount = N;
+      for(int i = 0; i < N; i++)
+      {
+         // Find the best move in moves
+         std::list<Move>::const_iterator it = moves.begin();
+         makeMove(*it);
+         int bestScore = computeScore(p);
+         Move bestMove = *it;
+         unmakeMove();
+         it++;
+         while( it != moves.end() )
+         {
+            makeMove(*it);
+            int moveScore = computeScore(p);
+            if( moveScore >= bestScore )
+            {
+               bestScore = moveScore;
+               bestMove = *it;
+            }
+            unmakeMove();
+            it++;
+         }
+
+         // Add the move to the tree and remove it from moves
+         parent->children[i] = new TreeNode();
+         parent->children[i]->parent = parent;
+         parent->children[i]->move = bestMove;
+         // recalculate bestScore
+         double score;
+         if( p != actualOriginalPlayer )
+         {
+            makeMove(bestMove);
+            score = computeScore( actualOriginalPlayer );
+            unmakeMove();
+         }
+         else
+            score = bestScore;
+         parent->children[i]->actualScore = score;
+         double temp = score - parent->actualScore;
+         parent->children[i]->relativeScore = parent->relativeScore + temp;
+         moves.remove(bestMove);
+
+         if( level == 0 )
+            continue;
+
+         // Continue building the tree
+         makeMove(bestMove);
+         computeMoveTree(opponent, level-1, parent->children[i], actualOriginalPlayer);
+         unmakeMove();
+      }
+   }
    void ChessBoard::makeMove(Move move, bool checkGameState)
    {  // checkGameState is false by default
 
@@ -589,27 +688,18 @@ namespace CChess
       // Cleanup
       delete gs;
    }
-   int ChessBoard::computeScore(Player p)
+   double ChessBoard::computeScore(Player p)
    {
-      int movesScore = 0, piecesScore = 0;
-      for(int x = 0; x < 8; x++)
-         for(int y = 0; y < 8; y++)
-            if(pieces[x][y].owner == p)
-               piecesScore += pieces[x][y].getValue();
-            else
-               piecesScore -= pieces[x][y].getValue();
-
-      std::list<Move> moves;
-      computeAvailableMoves(p, false, &moves);
-      movesScore += moves.size();
-      computeAvailableMoves(p == White ? Black : White, false, &moves);
-      movesScore -= moves.size();
-
-      int finalScore = movesScore * piecesScore;
-      if( movesScore < 0 && piecesScore < 0 )
-         finalScore = -finalScore;
-
-      return finalScore;
+      double score = 0;
+      for( int x = 0; x < 8; x++ )
+      for( int y = 0; y < 8; y++ )
+      {
+         Piece& piece = pieces[x][y];
+         if( piece.type == Piece::None )
+            continue;
+         score += (piece.owner == p ? 1.0 : -1.0) * piece.getValue(); //getCellValue(x,y);
+      }
+      return score;
    }
    Piece ChessBoard::getPiece(int x, int y)
    {
@@ -634,6 +724,7 @@ namespace CChess
    GameSnapshot* ChessBoard::createSnapshot()
    {
       GameSnapshot* gs = new GameSnapshot();
+      gs->state = state;
       for( int x = 0; x < 8; x++ )
          for( int y = 0; y < 8; y++ )
             gs->pieces[x][y] = pieces[x][y];
@@ -641,11 +732,11 @@ namespace CChess
    }
    void ChessBoard::loadSnapshot(GameSnapshot* gs)
    {
+      state = gs->state;
       for( int x = 0; x < 8; x++ )
       for( int y = 0; y < 8; y++ )
          pieces[x][y] = gs->pieces[x][y];
    }
-
    void ChessBoard::clearHistory()
    {
       GameSnapshot* gs;
