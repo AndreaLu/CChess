@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <list>
+#include <algorithm>
 
 #ifndef NULL
 #define NULL 0
