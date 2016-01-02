@@ -153,13 +153,6 @@ namespace CChess
             if( type == Piece::Pawn )
             {
                int destY;
-               // Boost start
-               if( (p == White && y == 6) || (p == Black && y == 1) )
-               {
-                  destY = y + (p == White ? -2 : 2);
-                  if( pieces[x][destY].type == Piece::None )
-                     myMoves.push_back(Move(x,y,x,destY));
-               }
 
                // Normal move
                destY = y + (p == White ? -1 : 1);
@@ -174,6 +167,13 @@ namespace CChess
                      // Final move
                      myMoves.push_back(Move(x,y,x,destY,Piece::Queen));
                      myMoves.push_back(Move(x,y,x,destY,Piece::Knight));
+                  }
+                  // Boost start
+                  if( (p == White && y == 6) || (p == Black && y == 1) )
+                  {
+                     destY = y + (p == White ? -2 : 2);
+                     if( pieces[x][destY].type == Piece::None )
+                        myMoves.push_back(Move(x,y,x,destY));
                   }
                }
 
