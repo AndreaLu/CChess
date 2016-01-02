@@ -307,13 +307,16 @@ namespace CChess
                }
 
                // Special move castle
-               bool moved = ( p == White ? wKingMoved : bKingMoved );
+               bool moved          = (p == White ? wKingMoved      : bKingMoved);
+               bool leftRookMoved  = (p == White ? wLeftRookMoved  : bLeftRookMoved);
+               bool rightRookMoved = (p == White ? wRightRookMoved : bRightRookMoved);
                if( moved )
                   continue;
                // Right castle
                if( pieces[x+1][y].type == Piece::None &&
                    pieces[x+2][y].type == Piece::None &&
                    pieces[x+3][y].type == Piece::Rook &&
+                   !rightRookMoved &&
                    pieces[x+3][y].owner == p )
                   myMoves.push_back(Move(x,y,x+2,y));
                // Left castle
@@ -321,6 +324,7 @@ namespace CChess
                    pieces[x-2][y].type == Piece::None &&
                    pieces[x-3][y].type == Piece::None &&
                    pieces[x-4][y].type == Piece::Rook &&
+                   !leftRookMoved &&
                    pieces[x-4][y].owner == p )
                   myMoves.push_back(Move(x,y,x-2,y));
             }
@@ -374,8 +378,7 @@ namespace CChess
             kingY = move.yTo;
          }
 
-         // Make move without checking the game state
-         makeMove(move, false);
+         makeMove(move);
 
          // If the king is in check, mark move for deletion
          computeAvailableMoves(opponent, false, &mvs);
@@ -386,7 +389,6 @@ namespace CChess
                break;
             }
 
-         // Unmake move
          unmakeMove();
       }
 
@@ -632,6 +634,23 @@ namespace CChess
             wKingMoved = true;
          else
             bKingMoved = true;
+      }
+      if( mover.type == Piece::Rook )
+      {
+         if( mover.owner == White )
+         {
+            if( move.xFrom == 0 )
+               wLeftRookMoved  = true;
+            else
+               wRightRookMoved = true;
+         }
+         else
+         {
+            if( move.xFrom == 0 )
+               bLeftRookMoved  = true;
+            else
+               bRightRookMoved = true;
+         }
       }
 
       turn = opponent;

@@ -62,7 +62,10 @@ namespace CChess
       void printHistory();
       bool wKingMoved;
       bool bKingMoved;
-
+      bool wLeftRookMoved;
+      bool wRightRookMoved;
+      bool bLeftRookMoved;
+      bool bRightRookMoved;
       unsigned int intellect;
       unsigned int n;
    };
