@@ -398,6 +398,23 @@ namespace CChess
          myMoves.remove(*eit);
       deletion.clear();
 
+      // Now that I removed the moves that make the king in check from myMoves
+      // I can check castle move condition
+      int kingY = (p == White ? 7 : 0);
+      if( pieces[4][kingY] == Piece(Piece::King,p) )
+      {
+         Move leftCastle(4, kingY, 2, kingY);
+         Move rightCastle(4, kingY, 6, kingY);
+         Move leftCastleCondition(4, kingY, 3, kingY);
+         Move rightCastleCondition(4, kingY, 5, kingY);
+         if( (std::find(myMoves.begin(), myMoves.end(), leftCastle) != myMoves.end()) &&
+            !(std::find(myMoves.begin(), myMoves.end(), leftCastleCondition) != myMoves.end()))
+            myMoves.remove(leftCastle);
+         if( (std::find(myMoves.begin(), myMoves.end(), rightCastle) != myMoves.end()) &&
+            !(std::find(myMoves.begin(), myMoves.end(), rightCastleCondition) != myMoves.end()))
+            myMoves.remove(rightCastle);
+      }
+
       // Copy myMoves to moves *********************************************************************
       // *******************************************************************************************
       moves.clear();
