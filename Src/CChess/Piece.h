@@ -6,8 +6,15 @@ namespace CChess
 {
    struct Piece
    {
-      enum Type {None, Pawn, Knight, Bishop, Rook, Queen, King } type;
-      Player owner;
+      enum Type {
+         None,
+         Pawn,
+         Knight,
+         Bishop,
+         Rook,
+         Queen,
+         King } type;   // Piece type
+      Player owner;     // Player the piece is owned by
       bool operator==(const Piece& piece)
       {
          return( owner == piece.owner && type == piece.type );
@@ -19,7 +26,7 @@ namespace CChess
       }
       Piece(Type type, Player owner)
       {
-         this->type = type;
+         this->type  = type;
          this->owner = owner;
       }
       // Return the value of the piece (from 0 to 1)
