@@ -6,7 +6,7 @@ Try and defeat the AI I wrote or go pro and write your own pretty easily.
 
 ### CChess as a Library
 
-This project is made up of two main namespaces independent of each other, namely CChess and GUI. The first provides a set of classes which allow to play chess, the latter is based on [SFML](http://www.sfml-dev.org/) and manages a Graphical User Interfaces (window creation, graphical rendering and user input handling). You can certainly employ CChess for your own purposes, in which case credits are greatly appreciated (a link to this repository is enough).
+This project is made up of two main namespaces independent of each other, namely CChess and GUI. The first provides a set of classes which allow to play chess, the latter is based on [SFML](http://www.sfml-dev.org/) and manages a Graphical User Interface (window creation, graphical rendering and user input handling). You can certainly employ CChess for your own purposes, in which case credits are greatly appreciated (a link to this repository is enough).
 
 #### Usage
 The usage is extremely simple.
