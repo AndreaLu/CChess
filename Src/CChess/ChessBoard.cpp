@@ -1,5 +1,4 @@
 #include "../CChess.h"
-#include "../GUI.h"
 using namespace CChess;
 #define CCHESS_DEBUG 0
 // TODO: implement the 'castle' move
@@ -433,7 +432,6 @@ namespace CChess
       MoveTree tree;
       tree.root = new TreeNode();
       computeMoveTree(p, intellect, tree.root);
-      printTreeNode(tree);
       if( tree.root->childrenCount == 0 )
          return(Move());
       std::list<TreeNode*> leaves;
