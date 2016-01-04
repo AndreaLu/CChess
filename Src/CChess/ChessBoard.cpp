@@ -176,6 +176,7 @@ namespace CChess
                         myMoves.push_back(Move(x,y,x,destY));
                   }
                }
+               destY = y + (p == White ? -1 : 1);
 
                // Normal capture
                if( x > 0 && pieces[x-1][destY].type != Piece::None
