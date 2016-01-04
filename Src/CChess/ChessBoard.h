@@ -34,6 +34,10 @@ namespace CChess
       // Fill moves with the available moves
       // for the specified playe
       void computeAvailableMoves(Player, bool CheckKing = true, std::list<Move>* moves = NULL);
+      void computeAvailableMoves(Player p, std::list<Move>* moves)
+      {
+         computeAvailableMoves(p, true, moves);
+      }
       // Get the piece in a specific cell of the board
       Piece getPiece(int x, int y);
       std::list<GameSnapshot*> history;
@@ -47,7 +51,7 @@ namespace CChess
             Player originalPlayer = CChess::White
        );
       // Go back of 1 move in the history
-      void unmakeMove();
+      void unmakeLastMove();
       // Available moves list
 
       // Chessboard

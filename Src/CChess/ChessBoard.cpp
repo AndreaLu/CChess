@@ -32,7 +32,7 @@ namespace CChess
    ChessBoard::ChessBoard()
    {
       resetMatch();
-      intellect = 2;
+      intellect = 5;
       n = 6;
    }
    ChessBoard::~ChessBoard()
@@ -389,7 +389,7 @@ namespace CChess
                break;
             }
 
-         unmakeMove();
+         unmakeLastMove();
       }
 
       // Delete these moves from myMoves ***********************************************************
@@ -472,7 +472,7 @@ namespace CChess
 
       // Fill moves with the available moves for p
       std::list<Move> moves;
-      computeAvailableMoves(p, true, &moves);
+      computeAvailableMoves(p, &moves);
       int N = (moves.size() >= n ? n : moves.size());
 
       // find the N best moves for player p
@@ -485,7 +485,7 @@ namespace CChess
          makeMove(*it);
          int bestScore = computeScore(p);
          Move bestMove = *it;
-         unmakeMove();
+         unmakeLastMove();
          it++;
          while( it != moves.end() )
          {
@@ -496,7 +496,7 @@ namespace CChess
                bestScore = moveScore;
                bestMove = *it;
             }
-            unmakeMove();
+            unmakeLastMove();
             it++;
          }
 
@@ -510,7 +510,7 @@ namespace CChess
          {
             makeMove(bestMove);
             score = computeScore( actualOriginalPlayer );
-            unmakeMove();
+            unmakeLastMove();
          }
          else
             score = bestScore;
@@ -525,7 +525,7 @@ namespace CChess
          // Continue building the tree
          makeMove(bestMove);
          computeMoveTree(opponent, level-1, parent->children[i], actualOriginalPlayer);
-         unmakeMove();
+         unmakeLastMove();
       }
    }
    void ChessBoard::makeMove(Move move, bool checkGameState)
@@ -714,7 +714,7 @@ namespace CChess
          }
       }
    }
-   void ChessBoard::unmakeMove()
+   void ChessBoard::unmakeLastMove()
    {
       // Retrieve the last snapshot and remove it from the history
       GameSnapshot* gs = *(--history.end());
