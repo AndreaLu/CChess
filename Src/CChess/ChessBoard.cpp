@@ -1,4 +1,5 @@
 #include "../CChess.h"
+#include "../GUI.h"
 using namespace CChess;
 #define CCHESS_DEBUG 0
 // TODO: implement the 'castle' move
@@ -32,8 +33,8 @@ namespace CChess
    ChessBoard::ChessBoard()
    {
       resetMatch();
-      intellect = 5;
-      n = 6;
+      intellect = 6;
+      n = 4;
    }
    ChessBoard::~ChessBoard()
    {
@@ -432,7 +433,7 @@ namespace CChess
       MoveTree tree;
       tree.root = new TreeNode();
       computeMoveTree(p, intellect, tree.root);
-
+      printTreeNode(tree);
       if( tree.root->childrenCount == 0 )
          return(Move());
       std::list<TreeNode*> leaves;
@@ -484,14 +485,14 @@ namespace CChess
          // Find the best move in moves
          std::list<Move>::const_iterator it = moves.begin();
          makeMove(*it);
-         int bestScore = computeScore(p);
+         double bestScore = computeScore(p);
          Move bestMove = *it;
          unmakeLastMove();
          it++;
          while( it != moves.end() )
          {
             makeMove(*it);
-            int moveScore = computeScore(p);
+            double moveScore = computeScore(p);
             if( moveScore >= bestScore )
             {
                bestScore = moveScore;
@@ -734,7 +735,8 @@ namespace CChess
          Piece& piece = pieces[x][y];
          if( piece.type == Piece::None )
             continue;
-         score += (piece.owner == p ? 1.0 : -1.0) * piece.getValue(); //getCellValue(x,y);
+         double factor = (piece.owner == p ? 1.0 : -1.0);
+         score += factor * piece.getValue() * (getCellValue(x,y) < 0.9 ? 0.9 : getCellValue(x,y));
       }
       return score;
    }

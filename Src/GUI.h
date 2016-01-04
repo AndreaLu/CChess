@@ -9,7 +9,7 @@
 #include "GUI/MenuRoom.h"
 #include "GUI/PlayRoom.h"
 
-
+void printMoveTree(const CChess::MoveTree&);
 
 
 #endif /* WINDOW_INCLUDES_H_ */
