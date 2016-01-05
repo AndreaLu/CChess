@@ -2,18 +2,18 @@
 #include "../GUI.h"
 struct GraphicalNode
 {
-   GraphicalNode(CChess::Move move, GraphicalNode* parent, double score)
+   GraphicalNode(CChess::Move move, GraphicalNode* parent, double relativeScore)
    {
       this->move = move;
       this->parent = parent;
       x = 0;
       y = 0;
-      this->score = score;
+      this->relativeScore = relativeScore;
    }
    CChess::Move move;
    GraphicalNode* parent;
    int x,y;
-   double score;
+   double relativeScore;
 };
 std::vector<std::list<GraphicalNode*>*> nodes;
 void navigateTree(CChess::TreeNode* node, int level = 0, GraphicalNode* parent = NULL);
@@ -27,7 +27,7 @@ void printMoveTree(const CChess::MoveTree& tree)
    };
 
    sf::RenderTexture renderTexture;
-   renderTexture.create(4096*2*2, 80*7);
+   renderTexture.create(3*3*3*130, 80*6);
    renderTexture.clear();
    sf::Font font;
    font.loadFromFile("font.ttf");
@@ -59,23 +59,24 @@ void printMoveTree(const CChess::MoveTree& tree)
             line[0] = sf::Vertex(sf::Vector2f(node->parent->x, node->parent->y));
             line[1] = sf::Vertex(sf::Vector2f(x, y));
             renderTexture.draw(line, 2, sf::Lines);
+            // draw node->move to x,y
+            std::string str;
+            char buff[30];
+            if( node->move == CChess::Move() )
+               sprintf(buff,"Invalid move");
+            else
+               sprintf(buff,"%i,%i,%i,%i\nScore r %f",
+                  node->move.xFrom,
+                  node->move.yFrom,
+                  node->move.xTo,
+                  node->move.yTo,
+                  node->relativeScore);
+            str = buff;
+            text.setString(str);
+            text.setPosition(x,y);
+            renderTexture.draw(text);
          }
-         // draw node->move to x,y
-         std::string str;
-         char buff[30];
-         if( node->move == CChess::Move() )
-            sprintf(buff,"Invalid move");
-         else
-            sprintf(buff,"%i,%i,%i,%i\nScore %f",
-               node->move.xFrom,
-               node->move.yFrom,
-               node->move.xTo,
-               node->move.yTo,
-               node->score);
-         str = buff;
-         text.setString(str);
-         text.setPosition(x,y);
-         renderTexture.draw(text);
+
          // recalculate x
          x += w;
       }
@@ -109,7 +110,7 @@ void navigateTree(CChess::TreeNode* node, int level, GraphicalNode* parent)
       nodes.push_back(new std::list<GraphicalNode*>());
    std::vector<std::list<GraphicalNode*>*>::iterator it = nodes.begin();
    repeat(level) it++;
-   GraphicalNode* newNode = new GraphicalNode(node->move,parent,node->actualScore);
+   GraphicalNode* newNode = new GraphicalNode(node->move,parent,node->relativeScore);
    (*it)->push_back(newNode);
    // Add the children of node
    int N = node->childrenCount;

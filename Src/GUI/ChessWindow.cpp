@@ -9,13 +9,9 @@ ChessWindow::ChessWindow()
    clientW      = 800;
    clientH      = 800;
 
-   roomCount    = 2;
-   gameRooms    = new Room*[roomCount]();
-   gameRooms[0] = new MenuRoom(clientW, clientH, this);
-   gameRooms[1] = 0;//new PlayRoom(clientW, clientH, this);
-   currentRoom  = 0;
+   currentRoom = new MenuRoom(clientW, clientH, this);
 
-   player = CChess::White;
+   userPlayer = CChess::White;
 }
 ChessWindow::~ChessWindow()
 {
@@ -63,28 +59,16 @@ void ChessWindow::start()
       // Game Code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       window.clear();
-      if(currentRoom >= roomCount)
-         break;
-      this->gameRooms[currentRoom]->loop(window);
+      if( currentRoom != NULL)
+         currentRoom->loop(window);
       Controls::loop();
       window.display();
    }
 }
 
-void ChessWindow::moveToNextRoom()
+void ChessWindow::moveToRoom(Room* room)
 {
-   currentRoom++;
-   if( currentRoom >= roomCount )
-      return;
-   if( this->gameRooms[currentRoom] == 0 )
-   {
-      switch(currentRoom)
-      {
-      case(1):
-            this->gameRooms[1] = new PlayRoom(clientW,clientH,this);
-      break;
-      default:
-         return;
-      }
-   }
+   if( currentRoom != NULL )
+      delete currentRoom;
+   currentRoom = room;
 }

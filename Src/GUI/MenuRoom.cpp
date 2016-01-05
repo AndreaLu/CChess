@@ -18,7 +18,7 @@ MenuRoom::MenuRoom(int clientW, int clientH, ChessWindow* cw)
    text.setString("CChess");
    text.setCharacterSize(40);
    text.setColor(sf::Color::Black);
-   text.setStyle( sf::Text::Bold  );
+   text.setStyle(sf::Text::Bold);
 
    // Load pieces sprite
    sf::Texture piecesTexture;
@@ -102,12 +102,12 @@ void MenuRoom::loop(sf::RenderWindow& window)
 
    if( Controls::leftMousePressed )
    {
-      chessWindow->player = CChess::White;
-      chessWindow->moveToNextRoom();
+      chessWindow->userPlayer = CChess::White;
+      chessWindow->moveToRoom(new PlayRoom(clientW, clientH, chessWindow));
    }
    if( Controls::rightMousePressed )
    {
-      chessWindow->player = CChess::Black;
-      chessWindow->moveToNextRoom();
+      chessWindow->userPlayer = CChess::Black;
+      chessWindow->moveToRoom(new PlayRoom(clientW, clientH, chessWindow));
    }
 }

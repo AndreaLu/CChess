@@ -10,14 +10,12 @@ public:
    // Destructor
    ~ChessWindow();
    void start();
-   void moveToNextRoom();
-   CChess::Player player;
+   void moveToRoom(Room*);
+   CChess::Player userPlayer;
 private:
    int clientW;
    int clientH;
-   Room** gameRooms;
-   int currentRoom;
-   int roomCount;
+   Room* currentRoom;
 };
 
 #endif /* CHESSGAME_H_ */
