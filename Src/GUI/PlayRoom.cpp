@@ -208,6 +208,7 @@ void PlayRoom::loop(sf::RenderWindow& window)
    {
       // User made his move checking the state of the game after it
       board.makeMove(selectedMove, true);
+      board.saveHistory("history.txt");
       // add the animations
       std::list<CChess::GameSnapshot::Event*>& events = (*(--board.history.end()))->events;
       GPiece* piece;

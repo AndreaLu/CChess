@@ -45,7 +45,9 @@ namespace CChess
    ChessBoard::ChessBoard()
    {
       resetMatch();
-      intellect = 8; // 8 was good
+      // intellect,n pairs:
+      // (8,2) is a good one
+      intellect = 8;
       n = 2;
    }
    ChessBoard::~ChessBoard()
@@ -789,18 +791,48 @@ namespace CChess
    void ChessBoard::saveHistory(const char* filename)
    {
       char buffer[100];
-      std::ofstream out(filename);
-      for(std::list<GameSnapshot*>::const_iterator it = history.begin(); it != history.end(); ++it)
+      int cnt = 0;
+      std::ofstream out(filename, std::ios_base::out);
+      for( std::list<GameSnapshot*>::iterator it = history.begin(); it != history.end(); ++it )
       {
-
-         sprintf( buffer,"%i,%i,%i,%i\n",
+         sprintf( buffer,"%i %i %i %i",
                (*it)->move.xFrom,
                (*it)->move.yFrom,
                (*it)->move.xTo,
                (*it)->move.yTo );
-         out << buffer;
+         if( cnt++ == 0 )
+            out << buffer;
+         else
+            out << '\n' << buffer;
       }
       out.close();
+   }
+   void ChessBoard::loadHistory(const char* filename)
+   {
+      std::ifstream infile(filename);
+      std::string line;
+      Move move;
+      std::list<Move> moves;
+
+      // each line of the history should be in the form of xfrom yfrom xto yto
+      // e.g.: 3 6 3 4
+      resetMatch();
+      // Read next move from file
+      while( infile >> move.xFrom >> move.yFrom >> move.xTo >> move.yTo )
+      {
+         // Put the available moves in moves
+         computeAvailableMoves(turn, &moves, true);
+         // If move is containde within moves
+         if( (std::find(moves.begin(), moves.end(), move) != moves.end()) )
+         {
+            // Play the specified move
+            makeMove(move, true);
+            // If the match is over or in stalemate exit
+            if( state != Playing )
+               break;
+         }
+      }
+      infile.close();
    }
    // Creates a complete snapshot of the current game
    GameSnapshot* ChessBoard::createSnapshot()
