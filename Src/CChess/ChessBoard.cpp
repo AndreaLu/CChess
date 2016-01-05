@@ -1,4 +1,5 @@
 #include "../CChess.h"
+#include "../GUI.h"
 using namespace CChess;
 #define CCHESS_DEBUG 0
 // TODO: implement the 'castle' move
@@ -6,6 +7,12 @@ using namespace CChess;
 int abs(int x)
 {
    if(x < 0)
+      return -x;
+   return x;
+}
+double abs(double x)
+{
+   if( x < 0 )
       return -x;
    return x;
 }
@@ -23,17 +30,25 @@ double clamp(double x, double max)
 {
    return x > max ? max : x;
 }
-double getCellValue(int x, int y)
+double getCellValue(Player p, int x, int y)
 {
-   return( 0.3 + clamp((((double)y / 7.0) + (3.5-abs(x-3.5))/3.5)/2.0,1.0) );
+   double yValue = 0, xValue; // from 0 to 1
+   if( p == White )
+      yValue = (7.0-(double)y)/7.0;
+   else
+      yValue = (double)y/7.0;
+   double diff = ((double)x-3.5) / 3.5;
+   if( diff < 0 ) diff = -diff;
+   xValue = 1.0 - diff;
+   return (xValue + yValue)/2.0;
 }
 namespace CChess
 {
    ChessBoard::ChessBoard()
    {
       resetMatch();
-      intellect = 6;
-      n = 4;
+      intellect = 2;
+      n = 2;
    }
    ChessBoard::~ChessBoard()
    {
@@ -432,6 +447,7 @@ namespace CChess
       MoveTree tree;
       tree.root = new TreeNode();
       computeMoveTree(p, intellect, tree.root);
+      printMoveTree(tree);
       if( tree.root->childrenCount == 0 )
          return(Move());
       std::list<TreeNode*> leaves;
@@ -473,7 +489,11 @@ namespace CChess
       // Fill moves with the available moves for p
       std::list<Move> moves;
       computeAvailableMoves(p, &moves);
-      int N = (moves.size() >= n ? n : moves.size());
+      int N = moves.size();
+      if( level == intellect )
+         N = moves.size();
+      else N = moves.size() > n ? n : moves.size();
+      //N = (moves.size() >= factor*n ? factor*n : moves.size());
 
       // find the N best moves for player p
       parent->children = new TreeNode*[N];
@@ -489,8 +509,40 @@ namespace CChess
          it++;
          while( it != moves.end() )
          {
+
             makeMove(*it);
             double moveScore = computeScore(p);
+            if(level == intellect)
+            {
+               // detect checkmate moves
+               std::list<Move> oppMoves;
+               std::list<Move> oppMoves2;
+               bool checkMate = false;
+               int kingX, kingY;
+               for( int x = 0; x < 8; x++ )
+               for( int y = 0; y < 8; y++ )
+                  if( pieces[x][y] == Piece(Piece::King, opponent) )
+                  {
+                     kingX = x;
+                     kingY = y;
+                  }
+               computeAvailableMoves(p, false, &oppMoves);
+               for(std::list<Move>::iterator mmit = oppMoves.begin(); mmit != oppMoves.end();
+                   ++mmit)
+                  if( (*mmit).xTo == kingX && (*mmit).yTo == kingY )
+                  {
+                     computeAvailableMoves(opponent, true, &oppMoves2);
+                     if( oppMoves2.size() == 0 )
+                     {
+                        checkMate = true;
+                        break;
+                     }
+                  }
+               if( checkMate )
+               {
+                  moveScore += 1000000000000000000000;
+               }
+            }
             if( moveScore >= bestScore )
             {
                bestScore = moveScore;
@@ -724,6 +776,7 @@ namespace CChess
       // Cleanup
       delete gs;
    }
+   // Computes the score of the current arrangement with respect to player p
    double ChessBoard::computeScore(Player p)
    {
       double score = 0;
@@ -734,7 +787,7 @@ namespace CChess
          if( piece.type == Piece::None )
             continue;
          double factor = (piece.owner == p ? 1.0 : -1.0);
-         score += factor * piece.getValue() * (getCellValue(x,y) < 0.9 ? 0.9 : getCellValue(x,y));
+         score += factor * piece.getValue();
       }
       return score;
    }
