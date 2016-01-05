@@ -45,9 +45,13 @@ namespace CChess
    ChessBoard::ChessBoard()
    {
       resetMatch();
+<<<<<<< HEAD
       // intellect,n pairs:
       // (8,2) is a good one
       intellect = 8;
+=======
+      intellect = 8; // 8 was good
+>>>>>>> 2cca5492859a2d8ebf456fa5dbd368fbfaf0c93f
       n = 2;
    }
    ChessBoard::~ChessBoard()
@@ -807,6 +811,7 @@ namespace CChess
       }
       out.close();
    }
+
    void ChessBoard::loadHistory(const char* filename)
    {
       std::ifstream infile(filename);
@@ -834,6 +839,8 @@ namespace CChess
       }
       infile.close();
    }
+=======
+>>>>>>> 2cca5492859a2d8ebf456fa5dbd368fbfaf0c93f
    // Creates a complete snapshot of the current game
    GameSnapshot* ChessBoard::createSnapshot()
    {
