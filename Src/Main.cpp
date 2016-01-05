@@ -1,5 +1,5 @@
 #include "GUI.h"
-#define GAMEGUI 1 // 1 : GUI, 0 : CONSOLE
+#define GAMEGUI 0 // 1 : GUI, 0 : CONSOLE
 
 #include <string>
 #include <sstream>
@@ -16,89 +16,81 @@ int main()
    ChessWindow window;
    window.start();
 #else
-   // Console play, init some variables
+
+   // Console play ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    CChess::ChessBoard board;
-   int coordinates[4];
    while( true )
    {
-      std::cout << board.getString() << std::endl << "Your turn! Input like 'xFrom,yFrom,xTo,yTo'"
-                << std::endl;
+      CChess::Player user, cpu;
+      int coords[4];
 
-      bool invalidInput = true;
-
-      // Acquire input from console ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      // Ask the user for the party ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      while( invalidInput )
+      std::string input;
+      do
       {
-         std::string input;
+         std::cout << "How do you wanna play? (w/b):";
          std::cin >> input;
-         std::vector<std::string> values = split(input,',');
+      }
+      while( input.length() > 1 || (input[0] != 'w' && input[0] != 'b') );
+      user = (input[0] == 'w' ? CChess::White : CChess::Black);
+      cpu  = (user == CChess::White ? CChess::Black : CChess::White);
+      if( user == CChess::Black )
+         board.makeMove(board.computeBestMove(cpu));
+      while( true )
+      {
+         std::cout << board.getString() << std::endl << "Your turn!" << std::endl;
 
-         // Verify the user entered 4 values
-         if(values.size() != 4)
+         // Get a valid move from the console ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         CChess::Move selectedMove;
+         while( true )
          {
-            std::cout << "Please type 4 values." << std::endl;
-            continue;
+            std::cout << "Please input like 'xFrom,yFrom,xTo,yTo'" << std::endl;
+
+            std::cin >> input;
+            std::vector<std::string> values = split(input,',');
+
+            // Verify the values are four
+            if(values.size() != 4)
+               continue;
+
+            // Verify the values are numbers
+            bool validCoordinates = true;
+            for(int i = 0; i < 4; i++)
+               if ( !(std::istringstream(values[i]) >> coords[i]) )
+                  validCoordinates = false;
+            if( !validCoordinates )
+               continue;
+
+            // Verify the numbers make up a valid move
+            selectedMove = CChess::Move(coords[0], coords[1], coords[2], coords[3]);
+            std::list<CChess::Move> moves;
+            board.computeAvailableMoves(user, &moves);
+            if( (std::find(moves.begin(), moves.end(), selectedMove) != moves.end()) )
+               break;
          }
 
-         // Verify the values are numbers
-         bool validCoordinates = true;
-         for(int i = 0; i < 4; i++)
-            if ( !(std::istringstream(values[i]) >> coordinates[i]) )
-            {
-               std::cout << values[i] << " is not a valid coordinate." << std::endl;
-               validCoordinates = false;
-               break;
-            }
-         if( !validCoordinates )
-            continue;
-
-         // Verify the numbers make up a valid move
-         std::list<CChess::Move> moves;
-         board.computeAvailableMoves(CChess::White, &moves);
-         std::list<CChess::Move>::const_iterator mit;
-         for( mit = board.moves.begin(); mit != board.moves.end(); ++mit )
+         // Play the selected move ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         board.makeMove(selectedMove);
+         if( board.state == CChess::Over || board.state == CChess::Stalemate )
          {
-            CChess::Move move = *mit;
-            if( move.xFrom == coordinates[0] &&
-                move.yFrom == coordinates[1] &&
-                move.xTo   == coordinates[2] &&
-                move.yTo   == coordinates[3])
-            {
-               invalidInput = false;
-               break;
-            }
+            std::cout << (board.state == CChess::Over ? "You won!" : "Stalemate!") << std::endl;
+            break;
          }
-         if(invalidInput)
-            std::cout << "The specified move is invalid." << std::endl;
-      }
 
-      // The specified move is valid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      CChess::Move selectedMove =
-            CChess::Move(coordinates[0],coordinates[1],coordinates[2],coordinates[3]);
-      board.makeMove(selectedMove);
-      if(board.state == CChess::Over)
-      {
-         std::cout << "You won, well done!" << std::endl;
-         break;
-      }
-      if(board.state == CChess::Stalemate)
-      {
-         std::cout << "Stalemate!" << std::endl;
-         break;
-      }
-      std::cout << board.getString() << std::endl << "My turn, lemme think..." << std::endl;
-      board.makeMove(board.computeBestMove(CChess::Black));
-      if(board.state == CChess::Over)
-      {
-         std::cout << board.getString() << std::endl << "You lost..." << std::endl;
-         break;
-      }
-      if(board.state == CChess::Stalemate)
-      {
-         std::cout << "Stalemate!" << std::endl;
-         break;
+         // AI turn ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         std::cout << board.getString() << std::endl << "My turn, lemme think..." << std::endl;
+         board.makeMove(board.computeBestMove(cpu));
+         if( board.state == CChess::Over || board.state == CChess::Stalemate )
+         {
+            std::cout << board.getString() << std::endl
+                      << (board.state == CChess::Over ? "You lost!" : "Stalemate!") << std::endl;
+            break;
+         }
       }
    }
 #endif
