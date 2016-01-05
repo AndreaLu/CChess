@@ -28,16 +28,17 @@ namespace CChess
       // to a printable string
       std::string getString();
 
-      std::list<Move> moves;
       // Perform the specified move
       void makeMove(Move, bool checkGameState = false);
       // Fill moves with the available moves
       // for the specified playe
-      void computeAvailableMoves(Player, bool CheckKing = true, std::list<Move>* moves = NULL);
-      void computeAvailableMoves(Player p, std::list<Move>* moves)
-      {
-         computeAvailableMoves(p, true, moves);
-      }
+      void computeAvailableMoves(Player, std::list<Move>* moves, bool CheckKing = true);
+
+      // For debugging purposes print history to
+      // an external file "history.txt"
+      void saveHistory(const char* filename = "history");
+      void loadHistory(const char* filename = "history");
+
       // Get the piece in a specific cell of the board
       Piece getPiece(int x, int y);
       std::list<GameSnapshot*> history;
@@ -61,9 +62,7 @@ namespace CChess
       void loadSnapshot(GameSnapshot*);
       void clearHistory();
 
-      // For debugging purposes print history to
-      // an external file "history.txt"
-      void printHistory();
+
       bool wKingMoved;
       bool bKingMoved;
       bool wLeftRookMoved;

@@ -104,13 +104,11 @@ PlayRoom::PlayRoom(int clientW, int clientH, ChessWindow* win)
    selectedPieceX = 0;
    selectedPieceY = 0;
 
-   player = win->player;
+   player = win->userPlayer;
    pieceSelected = false;
 
    if( player == CChess::White )
-   {
       isMoveSelected = false;
-   }
    else
    {
       isMoveSelected = true;
@@ -301,7 +299,7 @@ void PlayRoom::loop(sf::RenderWindow& window)
          if( !pieceSelected )
          {
             bool selectionValid = false;
-            board.computeAvailableMoves(player, true, &availableMoves);
+            board.computeAvailableMoves(player, &availableMoves, true);
             for( std::list<CChess::Move>::iterator it = availableMoves.begin();
                                                    it != availableMoves.end();
                                                    ++it )
