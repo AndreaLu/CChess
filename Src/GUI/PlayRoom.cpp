@@ -149,7 +149,9 @@ PlayRoom::PlayRoom(int clientW, int clientH, ChessWindow* win)
          pieceSprites[i].setTexture(piecesTexture);
          pieceSprites[i++].setTextureRect(sf::IntRect(x*100,y*100,100,100));
       }
-
+#if CCHESS_DEBUG == 1
+   board.loadHistory("history.txt");
+#endif
    // Instantiate all the pieces ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    for( int x = 0; x < 8; x++ )
