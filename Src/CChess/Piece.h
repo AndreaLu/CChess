@@ -39,13 +39,13 @@ namespace CChess
          case(Knight):
                return 3.0 / 10.0;
          case(Bishop):
-               return 5.0 / 10.0;
+               return 3.0 / 10.0;
          case(Rook):
-               return 8.0 / 10.0;
+               return 5.0 / 10.0;
          case(Queen):
                return 9.0 / 10.0;
          case(King):
-               return 10.0 / 10.0;
+               return 1000.0 / 10.0;
          default:
             return 0.0;
          }
