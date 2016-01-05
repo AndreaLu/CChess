@@ -1,6 +1,8 @@
 #ifndef CCHESS_H_
 #define CCHESS_H_
 
+#define CCHESS_DEBUG 0
+
 #include <fstream>
 #include <string>
 #include <list>

@@ -1,9 +1,7 @@
 #include "../CChess.h"
 #include "../GUI.h"
 using namespace CChess;
-#define CCHESS_DEBUG 0
-// TODO: implement the 'castle' move
-// TODO: implement pawn's final move
+
 int abs(int x)
 {
    if(x < 0)
@@ -47,7 +45,7 @@ namespace CChess
    ChessBoard::ChessBoard()
    {
       resetMatch();
-      intellect = 2;
+      intellect = 8; // 8 was good
       n = 2;
    }
    ChessBoard::~ChessBoard()
@@ -56,8 +54,6 @@ namespace CChess
    }
    void ChessBoard::resetMatch()
    {
-      turn = White;
-#if CCHESS_DEBUG == 0
       // Rearrange the pieces
       for(int i = 0; i < 8; i++)
       {
@@ -87,21 +83,19 @@ namespace CChess
             for( int j = 0; j < 8; j++ )
                pieces[j][i].type = Piece::None;
       }
-#else
-      pieces[3][1] = Piece(Piece::Pawn, White);
-
-      pieces[0][7] = Piece(Piece::King, White);
-      pieces[7][7] = Piece(Piece::King, Black);
-#endif
 
       // Clear history data
       clearHistory();
 
-      // Game state
-      state = Playing;
-
-      bKingMoved = false;
-      wKingMoved = false;
+      // Chessboard variables
+      state           = Playing;    // Game state (playing, over, stalemate)
+      turn            = White;      // Player turn
+      wLeftRookMoved  = false;      // These are used to verify the castle move conditions
+      bLeftRookMoved  = false;
+      wRightRookMoved = false;
+      bRightRookMoved = false;
+      bKingMoved      = false;
+      wKingMoved      = false;
    }
    std::string ChessBoard::getString()
    {
@@ -145,12 +139,11 @@ namespace CChess
       }
       return ret;
    }
-   void ChessBoard::computeAvailableMoves(Player p, bool checkKing, std::list<Move>* pMoves )
+   void ChessBoard::computeAvailableMoves(Player p, std::list<Move>* pMoves, bool checkKing)
    {
       // This function makes pMoves (or this->moves in the case pMoves is not specified)
       // contain the available moves to player p
-
-      std::list<Move>& moves = (pMoves == NULL ? this->moves : *pMoves);
+      std::list<Move>& moves = *pMoves;
       std::list<Move> myMoves;
 
       // Put into myMoves all the moves normally available to every piece owned by p ***************
@@ -361,7 +354,7 @@ namespace CChess
       // Find the moves in myMoves that put the king in check **************************************
       // *******************************************************************************************
       // Find the position of the king of player p
-      int origKingX, origKingY;
+      int origKingX = 0, origKingY = 0;
       bool kingFound = false;
       for(int x = 0; x < 8; x++)
          for(int y = 0; y < 8; y++)
@@ -397,7 +390,7 @@ namespace CChess
          makeMove(move);
 
          // If the king is in check, mark move for deletion
-         computeAvailableMoves(opponent, false, &mvs);
+         computeAvailableMoves(opponent, &mvs, false);
          for( eit = mvs.begin(); eit != mvs.end(); ++eit )
             if( (*eit).xTo == kingX && (*eit).yTo == kingY )
             {
@@ -476,7 +469,6 @@ namespace CChess
       }
 
       leaves.clear();
-      // TODO: clear tree (memory leak)
       tree.clear();
       return bestMove;
    }
@@ -488,7 +480,7 @@ namespace CChess
 
       // Fill moves with the available moves for p
       std::list<Move> moves;
-      computeAvailableMoves(p, &moves);
+      computeAvailableMoves(p, &moves, true);
       int N = moves.size();
       if( level == intellect )
          N = moves.size();
@@ -509,16 +501,15 @@ namespace CChess
          it++;
          while( it != moves.end() )
          {
-
             makeMove(*it);
             double moveScore = computeScore(p);
+            // Change movescore accordingly to checkmate
             if(level == intellect)
             {
-               // detect checkmate moves
+               std::list<Move> myMoves;
                std::list<Move> oppMoves;
-               std::list<Move> oppMoves2;
-               bool checkMate = false;
-               int kingX, kingY;
+               // Find the opponent king
+               int kingX = 0, kingY = 0;
                for( int x = 0; x < 8; x++ )
                for( int y = 0; y < 8; y++ )
                   if( pieces[x][y] == Piece(Piece::King, opponent) )
@@ -526,21 +517,21 @@ namespace CChess
                      kingX = x;
                      kingY = y;
                   }
-               computeAvailableMoves(p, false, &oppMoves);
-               for(std::list<Move>::iterator mmit = oppMoves.begin(); mmit != oppMoves.end();
-                   ++mmit)
+               // If the opponent king is in check (aka: there is a move I can make to capture it)
+               computeAvailableMoves(p, &myMoves, false);
+               for(std::list<Move>::iterator mmit = myMoves.begin(); mmit != myMoves.end(); ++mmit)
+               {
                   if( (*mmit).xTo == kingX && (*mmit).yTo == kingY )
                   {
-                     computeAvailableMoves(opponent, true, &oppMoves2);
-                     if( oppMoves2.size() == 0 )
+                     // And if the opponent has no moves to play
+                     computeAvailableMoves(opponent, &oppMoves, true);
+                     if( oppMoves.size() == 0 )
                      {
-                        checkMate = true;
+                        // Then *mmit is a winning move
+                        moveScore = 999999999999999;
                         break;
                      }
                   }
-               if( checkMate )
-               {
-                  moveScore += 1000000000000000000000;
                }
             }
             if( moveScore >= bestScore )
@@ -727,7 +718,7 @@ namespace CChess
       // If enemy has no move to make and is in check, it is over!
       std::list<Move> moves;
       std::list<Move>::const_iterator it;
-      computeAvailableMoves(opponent, true, &moves);
+      computeAvailableMoves(opponent, &moves, true);
       if( moves.size() == 0 )
       {
          // Find enemy king position
@@ -740,7 +731,7 @@ namespace CChess
                if( pieces[x][y] == enemyKing )
                {
                   // Check if enemyKing is in check
-                  computeAvailableMoves(p, false, &moves);
+                  computeAvailableMoves(p, &moves, false);
                   for(it = moves.begin(); it != moves.end(); ++it)
                      if( (*it).xTo == x && (*it).yTo == y )
                      {
@@ -795,10 +786,10 @@ namespace CChess
    {
       return pieces[x][y];
    }
-   void ChessBoard::printHistory()
+   void ChessBoard::saveHistory(const char* filename)
    {
       char buffer[100];
-      std::ofstream out("history.txt");
+      std::ofstream out(filename);
       for(std::list<GameSnapshot*>::const_iterator it = history.begin(); it != history.end(); ++it)
       {
 
@@ -811,18 +802,36 @@ namespace CChess
       }
       out.close();
    }
+   // Creates a complete snapshot of the current game
    GameSnapshot* ChessBoard::createSnapshot()
    {
       GameSnapshot* gs = new GameSnapshot();
       gs->state = state;
+      gs->turn = turn;
+      gs->winner = winner;
+      gs->wKingMoved = wKingMoved;
+      gs->bKingMoved = bKingMoved;
+      gs->wLeftRookMoved = wLeftRookMoved;
+      gs->wRightRookMoved = wRightRookMoved;
+      gs->bLeftRookMoved = bLeftRookMoved;
+      gs->bRightRookMoved = bRightRookMoved;
       for( int x = 0; x < 8; x++ )
-         for( int y = 0; y < 8; y++ )
-            gs->pieces[x][y] = pieces[x][y];
+      for( int y = 0; y < 8; y++ )
+         gs->pieces[x][y] = pieces[x][y];
       return gs;
    }
+   // Restore the current game to the specified snapshot
    void ChessBoard::loadSnapshot(GameSnapshot* gs)
    {
-      state = gs->state;
+      state  = gs->state;
+      turn   = gs->turn;
+      winner = gs->winner;
+      wKingMoved = gs->wKingMoved;
+      bKingMoved = gs->bKingMoved;
+      wLeftRookMoved = gs->wLeftRookMoved;
+      wRightRookMoved = gs->wRightRookMoved;
+      bLeftRookMoved = gs->bLeftRookMoved;
+      bRightRookMoved = gs->bRightRookMoved;
       for( int x = 0; x < 8; x++ )
       for( int y = 0; y < 8; y++ )
          pieces[x][y] = gs->pieces[x][y];
